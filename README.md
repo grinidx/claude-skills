@@ -24,6 +24,7 @@
 | 📎 **[Web Clipper](./web-clipper/)** | Clip web pages to markdown with YAML frontmatter — clean extraction, Cloudflare bypass, tagging, full-text search, repo-search integration |
 | ⌚ **[Garmin](./garmin/)** | Garmin Connect health & fitness data — Body Battery, HRV, sleep, activities, VO2 max, training load/readiness, daily snapshots & weekly rollups |
 | ✍️ **[Humanize](./humanize/)** | Rewrite AI-generated text to sound natural — 4-pass prompt workflow (burstiness, perplexity, banned patterns, self-audit), optional Undetectable AI API |
+| 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
 
 ## 🚀 Installation
 
@@ -72,6 +73,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | 📎 Web Clipper | None (local only) | `web-clipper/setup.sh` |
 | ⌚ Garmin | `~/.garmin/` | `garmin/scripts/setup.sh` |
 | ✍️ Humanize | `~/.humanize/` (optional) | `humanize/scripts/setup.sh` |
+| 🎨 GPT Image 2 | `$OPENAI_API_KEY` env var | `gpt-image-2/setup.sh` |
 
 ## ⚙️ Requirements
 
@@ -85,6 +87,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | 📎 Web Clipper | Python 3 · pip |
 | ⌚ Garmin | Python 3 · pip |
 | ✍️ Humanize | Python 3 · pip (commercial API only) |
+| 🎨 GPT Image 2 | Python 3 · pip · `imagemagick` (optional) |
 
 ## 📄 License
 

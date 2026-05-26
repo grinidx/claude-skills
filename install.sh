@@ -16,7 +16,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.claude/skills"
 
 # All available Claude Code skills (have SKILL.md)
-AVAILABLE_SKILLS=(outlook trello repo-search pst-to-markdown email-search web-clipper garmin humanize)
+AVAILABLE_SKILLS=(outlook trello repo-search pst-to-markdown email-search web-clipper garmin humanize gpt-image-2)
 
 # Colours
 GREEN='\033[0;32m'
@@ -116,6 +116,19 @@ check_deps_humanize() {
     return 0
 }
 
+check_deps_gpt_image_2() {
+    if ! command -v python3 &>/dev/null; then
+        err "Missing dependency for gpt-image-2: python3"
+        return 1
+    fi
+    if ! command -v magick &>/dev/null; then
+        warn "ImageMagick not found (optional — needed for resizing and contact sheets)"
+        echo "    macOS: brew install imagemagick"
+        echo "    Linux: sudo apt install imagemagick"
+    fi
+    return 0
+}
+
 check_deps() {
     local skill="$1"
     case "$skill" in
@@ -127,6 +140,7 @@ check_deps() {
         web-clipper)    check_deps_web_clipper ;;
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
+        gpt-image-2)    check_deps_gpt_image_2 ;;
         *)              return 0 ;;
     esac
 }
@@ -311,6 +325,29 @@ post_install() {
                 ok "Humanize API config found"
             else
                 info "No commercial API configured (optional) -- run: ~/.claude/skills/humanize/scripts/setup.sh"
+            fi
+            ;;
+
+        gpt-image-2)
+            chmod +x "$REPO_DIR/gpt-image-2/setup.sh" 2>/dev/null || true
+            chmod +x "$REPO_DIR/gpt-image-2/scripts/gpt_image_2.py" 2>/dev/null || true
+
+            # Set up Python venv if needed
+            if [ ! -d "$REPO_DIR/gpt-image-2/.venv" ]; then
+                info "Setting up Python virtual environment..."
+                python3 -m venv "$REPO_DIR/gpt-image-2/.venv"
+                "$REPO_DIR/gpt-image-2/.venv/bin/pip" install --upgrade pip -q
+                "$REPO_DIR/gpt-image-2/.venv/bin/pip" install -r "$REPO_DIR/gpt-image-2/requirements.txt" -q
+            else
+                ok "Python venv already exists"
+                "$REPO_DIR/gpt-image-2/.venv/bin/pip" install -r "$REPO_DIR/gpt-image-2/requirements.txt" -q 2>/dev/null || true
+            fi
+
+            if [ -n "$OPENAI_API_KEY" ] || [ -n "$OPENROUTER_API_KEY" ]; then
+                ok "API key found in environment"
+            else
+                warn "No OPENAI_API_KEY in environment — set it before generating images"
+                echo "    export OPENAI_API_KEY=sk-..."
             fi
             ;;
     esac

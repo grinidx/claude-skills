@@ -13,6 +13,7 @@ claude-skills/
 ├── email-search/     # PST ingestion + vector search + analytics (Python/ChromaDB)
 ├── garmin/           # Garmin Connect health & fitness data (Python/garminconnect)
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
+├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
 ├── install.sh        # Symlink installer for all skills
 └── README.md         # User-facing documentation
 ```
@@ -62,6 +63,7 @@ No secrets in the repo. Each skill externalises credentials:
 | Email Search | None (local) |
 | Garmin | `~/.garmin/` |
 | Humanize | `~/.humanize/` (optional, for commercial API) |
+| GPT Image 2 | `$OPENAI_API_KEY` env var |
 
 ### Dependencies
 
