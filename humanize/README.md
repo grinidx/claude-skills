@@ -1,22 +1,23 @@
 # Humanize
 
-Rewrite AI-generated text to sound natural and pass AI detection tools (GPTZero, Turnitin, Originality.ai) while preserving meaning exactly.
+Rewrite AI-generated text to sound natural in **British English** and pass AI detection tools (GPTZero, Turnitin, Originality.ai) while preserving meaning exactly.
 
 ## Engines
 
 ### Claude Engine (default)
 
-Uses Claude Code's own conversation to rewrite text via a multi-pass prompt workflow. No extra API calls or costs.
+Uses Claude Code's own conversation to rewrite text via a structured workflow. No extra API calls or costs.
 
-**4-pass process:**
-1. **Structural deconstruction** - varies sentence/paragraph length to increase burstiness
-2. **Diction & voice** - replaces predictable AI word choices with natural alternatives
-3. **Banned patterns purge** - removes 60+ known AI-telltale words and phrases
-4. **Self-audit** - verifies meaning preservation and catches remaining patterns
+**Workflow:**
+1. **Triage** — short-circuits if text is already human.
+2. **Tone preset** — neutral / casual / professional / academic, applied consistently throughout.
+3. **Pattern sweep** — five categorised pattern groups (Content, Language, Style, Communication, Filler) with concrete before/after rewrites.
+4. **Soul pass** — adds opinions, rhythm variance and specificity within the tone.
+5. **Self-audit dual prompt** — internally asks *"what makes this obviously AI?"* then *"fix it"*.
 
 ### Undetectable AI Engine (optional)
 
-Commercial API at ~$10/month. Submit text and receive humanized version.
+Commercial API at ~$10/month. Submit text and receive humanised version.
 
 ## Setup
 
@@ -38,6 +39,7 @@ You'll need an API key from [Undetectable AI](https://undetectable.ai/develop).
 "humanize my clipboard"
 "humanize draft.md in a casual tone"
 "humanize draft.md with heavy rewriting"
+"humanize essay.md and explain what you changed"
 "humanize draft.md using undetectable"
 "humanize draft.md and save to output.md"
 ```
@@ -48,6 +50,7 @@ You'll need an API key from [Undetectable AI](https://undetectable.ai/develop).
 |--------|--------|---------|
 | Tone | neutral, casual, professional, academic | neutral |
 | Aggressiveness | light, moderate, heavy | moderate |
+| Explain | on / off | off |
 | Engine | claude, undetectable | claude |
 | Output | conversation, save to file | conversation |
 
