@@ -25,6 +25,7 @@
 | ⌚ **[Garmin](./garmin/)** | Garmin Connect health & fitness data — Body Battery, HRV, sleep, activities, VO2 max, training load/readiness, daily snapshots & weekly rollups |
 | ✍️ **[Humanize](./humanize/)** | Rewrite AI-generated text to sound natural in British English — 29+ AI tells across 5 categories with before/after examples, tone presets (neutral/casual/professional/academic), self-audit dual prompt, optional Undetectable AI API |
 | 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
+| 🔬 **[Deep Research](./deep-research/)** | Multi-source web research with citation tracking, evidence persistence, and structured report generation — Bright Data SERP + Web Unlocker backend, quick/standard/deep/ultradeep modes, deterministic credibility re-ranking |
 
 ## 🚀 Installation
 
@@ -74,6 +75,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | ⌚ Garmin | `~/.garmin/` | `garmin/scripts/setup.sh` |
 | ✍️ Humanize | `~/.humanize/` (optional) | `humanize/scripts/setup.sh` |
 | 🎨 GPT Image 2 | `$OPENAI_API_KEY` env var | `gpt-image-2/setup.sh` |
+| 🔬 Deep Research | `~/.deep-research/config.env` (Bright Data) | `deep-research/setup.sh` |
 
 ## ⚙️ Requirements
 
@@ -88,6 +90,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | ⌚ Garmin | Python 3 · pip |
 | ✍️ Humanize | Python 3 · pip (commercial API only) |
 | 🎨 GPT Image 2 | Python 3 · pip · `imagemagick` (optional) |
+| 🔬 Deep Research | Python 3 · pip · `requests` · Bright Data account (SERP API + Web Unlocker) |
 
 ## 📄 License
 

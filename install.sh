@@ -16,7 +16,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.claude/skills"
 
 # All available Claude Code skills (have SKILL.md)
-AVAILABLE_SKILLS=(outlook trello repo-search pst-to-markdown email-search web-clipper garmin humanize gpt-image-2)
+AVAILABLE_SKILLS=(outlook trello repo-search pst-to-markdown email-search web-clipper garmin humanize gpt-image-2 deep-research)
 
 # Colours
 GREEN='\033[0;32m'
@@ -129,6 +129,14 @@ check_deps_gpt_image_2() {
     return 0
 }
 
+check_deps_deep_research() {
+    if ! command -v python3 &>/dev/null; then
+        err "Missing dependency for deep-research: python3"
+        return 1
+    fi
+    return 0
+}
+
 check_deps() {
     local skill="$1"
     case "$skill" in
@@ -141,6 +149,7 @@ check_deps() {
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
         gpt-image-2)    check_deps_gpt_image_2 ;;
+        deep-research)  check_deps_deep_research ;;
         *)              return 0 ;;
     esac
 }
@@ -348,6 +357,27 @@ post_install() {
             else
                 warn "No OPENAI_API_KEY in environment — set it before generating images"
                 echo "    export OPENAI_API_KEY=sk-..."
+            fi
+            ;;
+
+        deep-research)
+            chmod +x "$REPO_DIR/deep-research/setup.sh" 2>/dev/null || true
+            chmod +x "$REPO_DIR/deep-research/scripts/bd_search.py" 2>/dev/null || true
+
+            # Set up Python venv if needed
+            if [ ! -d "$REPO_DIR/deep-research/.venv" ]; then
+                info "Setting up Python virtual environment..."
+                "$REPO_DIR/deep-research/setup.sh"
+            else
+                ok "Python venv already exists"
+                # Update deps quietly
+                "$REPO_DIR/deep-research/.venv/bin/pip" install -r "$REPO_DIR/deep-research/requirements.txt" -q 2>/dev/null || true
+            fi
+
+            if [ -f "$HOME/.deep-research/config.env" ] && grep -q "^BRIGHTDATA_API_TOKEN=." "$HOME/.deep-research/config.env" 2>/dev/null; then
+                ok "Bright Data credentials found"
+            else
+                warn "No Bright Data credentials — run: ~/.claude/skills/deep-research/setup.sh"
             fi
             ;;
     esac

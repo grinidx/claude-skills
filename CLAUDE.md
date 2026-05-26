@@ -14,6 +14,7 @@ claude-skills/
 ├── garmin/           # Garmin Connect health & fitness data (Python/garminconnect)
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
+├── deep-research/    # Multi-source web research via Bright Data SERP + Web Unlocker (Python)
 ├── install.sh        # Symlink installer for all skills
 └── README.md         # User-facing documentation
 ```
@@ -64,6 +65,7 @@ No secrets in the repo. Each skill externalises credentials:
 | Garmin | `~/.garmin/` |
 | Humanize | `~/.humanize/` (optional, for commercial API) |
 | GPT Image 2 | `$OPENAI_API_KEY` env var |
+| Deep Research | `~/.deep-research/config.env` (Bright Data SERP + Web Unlocker) |
 
 ### Dependencies
 
@@ -77,7 +79,7 @@ No secrets in the repo. Each skill externalises credentials:
 - Python scripts use the skill's `.venv/bin/python` (not system Python)
 - SKILL.md commands use full absolute paths (`~/.claude/skills/<skill>/...`)
 - Error messages go to stderr, structured output (JSON) to stdout
-- All skills work offline except Outlook, Trello, Garmin, and Humanize's commercial API engine (which need API access)
+- All skills work offline except Outlook, Trello, Garmin, Humanize's commercial API engine, and Deep Research (which need API access)
 
 ## Important Reminders
 
