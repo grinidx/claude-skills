@@ -1,6 +1,6 @@
-# Claude Code Skills
+# Claude and Codex Skills
 
-A collection of Claude Code skills that extend Claude with external service integrations and local tooling.
+A collection of skills that extend Claude and Codex with external service integrations and local tooling.
 
 ## Repository Structure
 
@@ -15,7 +15,8 @@ claude-skills/
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
 ├── deep-research/    # Multi-source web research via Bright Data SERP + Web Unlocker (Python)
-├── install.sh        # Symlink installer for all skills
+├── install.sh        # Claude installer (symlinks into ~/.claude/skills)
+├── install-codex.sh  # Codex installer (installs into ~/.codex/skills)
 └── README.md         # User-facing documentation
 ```
 
@@ -32,23 +33,24 @@ skill-name/
   references/         # Setup guides, manual instructions
 ```
 
-- `SKILL.md` is the file Claude Code discovers and loads. It must have YAML frontmatter with `name` and `description`.
-- Skills are **symlinked** from this repo into `~/.claude/skills/` via `install.sh`. Edits here are immediately live.
+- `SKILL.md` is the file the skill host discovers and loads. It must have YAML frontmatter with `name` and `description`.
+- Claude installs are symlinked from this repo into `~/.claude/skills/` via `install.sh`.
+- Codex installs go into `~/.codex/skills/` via `install-codex.sh`, with generated `SKILL.md` files that rewrite Claude-style paths for Codex.
 
 ## Working on Skills
 
 ### Adding a New Skill
 
 1. Create a directory with `SKILL.md`, `setup.sh`, `scripts/`, and `README.md`
-2. Add the skill name to `AVAILABLE_SKILLS` in `install.sh`
-3. Add a `check_deps_<skill>()` function and `post_install` case in `install.sh`
+2. Add the skill name to `AVAILABLE_SKILLS` in both `install.sh` and `install-codex.sh`
+3. Add a `check_deps_<skill>()` function and `post_install` case in both installers
 4. Add the skill to the README tables (skills list, credentials, requirements)
-5. Test with `./install.sh <skill-name>`
+5. Test with `./install.sh <skill-name>` and `./install-codex.sh <skill-name>`
 
 ### Modifying an Existing Skill
 
-- The `SKILL.md` is what Claude reads at runtime — keep it accurate and complete
-- Test changes by invoking the skill in Claude Code after editing
+- The source `SKILL.md` is used directly by Claude and transformed for Codex at install time
+- Test changes by invoking the skill in Claude Code and reinstalling for Codex after editing instructions
 - Python skills use isolated `.venv/` directories (gitignored)
 
 ### Credentials
@@ -71,13 +73,13 @@ No secrets in the repo. Each skill externalises credentials:
 
 - **Outlook/Trello:** bash, jq, curl (+ azure-cli for Outlook)
 - **Python skills:** Each has its own `requirements.txt` and `.venv/`
-- `install.sh` handles venv creation and dependency installation automatically
+- Both installers handle venv creation and dependency installation automatically
 
 ## Conventions
 
 - Shell scripts use `set -e` and are `chmod +x`
 - Python scripts use the skill's `.venv/bin/python` (not system Python)
-- SKILL.md commands use full absolute paths (`~/.claude/skills/<skill>/...`)
+- Source `SKILL.md` commands use Claude-style absolute paths (`~/.claude/skills/<skill>/...`); `install-codex.sh` rewrites them for Codex installs
 - Error messages go to stderr, structured output (JSON) to stdout
 - All skills work offline except Outlook, Trello, Garmin, Humanize's commercial API engine, and Deep Research (which need API access)
 

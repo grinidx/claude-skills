@@ -1,11 +1,12 @@
 <div align="center">
 
-# 🧩 Claude Code Skills
+# 🧩 Claude and Codex Skills
 
-**Extend [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with external service integrations and local tooling.**
+**Extend [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Codex with external service integrations and local tooling.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Skills-blueviolet?logo=anthropic)](https://docs.anthropic.com/en/docs/claude-code)
+[![Codex](https://img.shields.io/badge/Codex-Skills-0A66C2)]()
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20WSL-lightgrey)]()
 
 </div>
@@ -33,19 +34,25 @@
 git clone https://github.com/dandcg/claude-skills.git
 cd claude-skills
 
-# Install all skills (symlinks into ~/.claude/skills/)
+# Install all skills for Claude (symlinks into ~/.claude/skills/)
 ./install.sh --all
+
+# Install all skills for Codex (into ~/.codex/skills/)
+./install-codex.sh --all
 
 # Or pick specific ones
 ./install.sh outlook trello
+./install-codex.sh outlook trello
 
 # Or interactive mode
 ./install.sh
+./install-codex.sh
 ```
 
-> Skills are **symlinked** — edits to this repo are immediately live in Claude Code. No re-install needed after `git pull`.
+> Claude installs are **symlinked** — edits to this repo are immediately live in Claude Code.
+> Codex installs generate `SKILL.md` files with Codex-local paths and symlink the rest of each skill directory.
 
-Each skill's `SKILL.md` uses [Claude Code's skill format](https://docs.anthropic.com/en/docs/claude-code) with YAML frontmatter for automatic discovery.
+Each skill's `SKILL.md` uses the same YAML-frontmatter skill format. `install.sh` installs for Claude, while `install-codex.sh` adapts the generated `SKILL.md` files for Codex on this machine.
 
 ## 🗂️ Skill Structure
 
