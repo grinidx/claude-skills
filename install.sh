@@ -223,7 +223,7 @@ post_install() {
             chmod +x "$REPO_DIR/outlook/scripts/"*.sh 2>/dev/null || true
             chmod +x "$REPO_DIR/outlook/install.sh" 2>/dev/null || true
 
-            if [ -f "$HOME/.outlook/credentials.json" ]; then
+            if [ -f "$HOME/.outlook/credentials.json" ] || ls "$HOME"/.outlook/*/credentials.json >/dev/null 2>&1; then
                 ok "Outlook credentials found"
             else
                 warn "No Outlook credentials — run: ~/.claude/skills/outlook/scripts/outlook-setup.sh"

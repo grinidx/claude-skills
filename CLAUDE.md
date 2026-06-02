@@ -59,7 +59,7 @@ No secrets in the repo. Each skill externalises credentials:
 
 | Skill | Location |
 |-------|----------|
-| Outlook | `~/.outlook/` |
+| Outlook | `~/.outlook/<account>/` (multi-account; `default` used if no account specified) |
 | Trello | `~/.trello/` |
 | Repo Search | None (local) |
 | PST to Markdown | None (local) |

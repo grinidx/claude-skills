@@ -3,7 +3,23 @@
 
 set -e
 
-CONFIG_DIR="$HOME/.outlook"
+BASE_DIR="$HOME/.outlook"
+
+# Account resolution: --account/-a flag wins, else OUTLOOK_ACCOUNT env, else "default"
+ACCOUNT="${OUTLOOK_ACCOUNT:-default}"
+if [ "$1" = "--account" ] || [ "$1" = "-a" ]; then
+    [ -n "$2" ] || { echo "Error: $1 requires an account name" >&2; exit 1; }
+    ACCOUNT="$2"; shift 2
+fi
+
+# One-time migration: legacy flat config -> default/
+if [ -f "$BASE_DIR/config.json" ] && [ ! -d "$BASE_DIR/default" ]; then
+    mkdir -p "$BASE_DIR/default"
+    mv "$BASE_DIR/config.json" "$BASE_DIR/credentials.json" "$BASE_DIR/id_cache.json" \
+       "$BASE_DIR/default/" 2>/dev/null || true
+fi
+
+CONFIG_DIR="$BASE_DIR/$ACCOUNT"
 CONFIG_FILE="$CONFIG_DIR/config.json"
 CREDS_FILE="$CONFIG_DIR/credentials.json"
 ID_CACHE_FILE="$CONFIG_DIR/id_cache.json"
@@ -11,7 +27,7 @@ GRAPH_URL="https://graph.microsoft.com/v1.0"
 
 # Check credentials
 if [ ! -f "$CREDS_FILE" ]; then
-    echo "Error: Credentials not found. Run outlook-setup.sh first."
+    echo "Error: Account '$ACCOUNT' not configured. Run: outlook-setup.sh --account $ACCOUNT"
     exit 1
 fi
 
@@ -1276,6 +1292,12 @@ ${existing_body}"
             att_id=$(echo "$att" | jq -r '.id')
             att_name=$(echo "$att" | jq -r '.name')
             att_size=$(echo "$att" | jq -r '.size')
+
+            # Sanitize server-supplied name: prevent path traversal out of $DOWNLOAD_DIR
+            att_name=$(basename "$att_name" | sed 's/\.\.//g')
+            if [ -z "$att_name" ] || [ "$att_name" = "." ]; then
+                att_name="attachment"
+            fi
 
             # Handle filename collisions
             base_name="${att_name%.*}"
