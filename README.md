@@ -17,8 +17,6 @@
 
 | Skill | Description |
 |-------|-------------|
-| 📬 **[Outlook](./outlook/)** | Microsoft 365 email & calendar via Graph API — inbox, send, drafts, attachments (up to 150 MB), calendar & availability |
-| 📋 **[Trello](./trello/)** | Board management via REST API — boards, lists, cards, comments, positions, smart-sort |
 | 🔍 **[Repo Search](./repo-search/)** | ChromaDB semantic search across markdown, PDF, DOCX & XLSX — find by meaning, filter by area/date, build summaries |
 | 📨 **[PST to Markdown](./pst-to-markdown/)** | Extract Outlook PST archives into organised markdown with YAML frontmatter & integrity verification |
 | 📧 **[Email Search](./email-search/)** | Ingest PST archives into ChromaDB — semantic search, analytics, timelines, top contacts, export |
@@ -27,6 +25,8 @@
 | ✍️ **[Humanize](./humanize/)** | Rewrite AI-generated text to sound natural in British English — 29+ AI tells across 5 categories with before/after examples, tone presets (neutral/casual/professional/academic), self-audit dual prompt, optional Undetectable AI API |
 | 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
 | 🔬 **[Deep Research](./deep-research/)** | Multi-source web research with citation tracking, evidence persistence, and structured report generation — Bright Data CLI backend (SERP + Web Unlocker), quick/standard/deep/ultradeep modes, deterministic credibility re-ranking |
+
+> **Moved:** the **Outlook** and **Trello** skills now live in their own repositories under [github.com/dbhq-uk](https://github.com/dbhq-uk) - install them via the DBHQ marketplace (`/plugin marketplace add dbhq-uk/marketplace`) or from [dbhq-uk/outlook](https://github.com/dbhq-uk/outlook) and [dbhq-uk/trello](https://github.com/dbhq-uk/trello).
 
 ## 🚀 Installation
 
@@ -41,8 +41,8 @@ cd claude-skills
 ./install-codex.sh --all
 
 # Or pick specific ones
-./install.sh outlook trello
-./install-codex.sh outlook trello
+./install.sh garmin web-clipper
+./install-codex.sh garmin web-clipper
 
 # Or interactive mode
 ./install.sh
@@ -73,8 +73,6 @@ No secrets are stored in this repo. Each skill externalises credentials:
 
 | Skill | Credential Location | Setup |
 |-------|---------------------|-------|
-| 📬 Outlook | `~/.outlook/` | `outlook/scripts/outlook-setup.sh` |
-| 📋 Trello | `~/.trello/` | `trello/scripts/trello-setup.sh` |
 | 🔍 Repo Search | None (local only) | `repo-search/setup.sh` |
 | 📨 PST to Markdown | None (local only) | `pst-to-markdown/setup.sh` |
 | 📧 Email Search | None (local only) | `email-search/setup.sh` |
@@ -88,8 +86,6 @@ No secrets are stored in this repo. Each skill externalises credentials:
 
 | Skill | Dependencies |
 |-------|-------------|
-| 📬 Outlook | `azure-cli` · `jq` · `curl` · `pandoc` (optional) |
-| 📋 Trello | `jq` · `curl` |
 | 🔍 Repo Search | Python 3 · pip |
 | 📨 PST to Markdown | Python 3 · pip · `readpst` (optional fallback) |
 | 📧 Email Search | Python 3 · pip |

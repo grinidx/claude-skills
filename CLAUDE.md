@@ -6,8 +6,6 @@ A collection of skills that extend Claude and Codex with external service integr
 
 ```
 claude-skills/
-├── outlook/          # Microsoft 365 email & calendar (bash/Graph API)
-├── trello/           # Trello board management (bash/REST API)
 ├── repo-search/      # Semantic search over markdown files (Python/ChromaDB)
 ├── pst-to-markdown/  # PST to markdown extraction (Python)
 ├── email-search/     # PST ingestion + vector search + analytics (Python/ChromaDB)
@@ -19,6 +17,8 @@ claude-skills/
 ├── install-codex.sh  # Codex installer (installs into ~/.codex/skills)
 └── README.md         # User-facing documentation
 ```
+
+> **Moved:** the `outlook` and `trello` skills now live in their own repos under [github.com/dbhq-uk](https://github.com/dbhq-uk) (extracted Jul 2026).
 
 ## Skill Anatomy
 
@@ -59,8 +59,6 @@ No secrets in the repo. Each skill externalises credentials:
 
 | Skill | Location |
 |-------|----------|
-| Outlook | `~/.outlook/<account>/` (multi-account; `default` used if no account specified) |
-| Trello | `~/.trello/` |
 | Repo Search | None (local) |
 | PST to Markdown | None (local) |
 | Email Search | None (local) |
@@ -71,7 +69,6 @@ No secrets in the repo. Each skill externalises credentials:
 
 ### Dependencies
 
-- **Outlook/Trello:** bash, jq, curl (+ azure-cli for Outlook)
 - **Python skills:** Each has its own `requirements.txt` and `.venv/`
 - Both installers handle venv creation and dependency installation automatically
 
@@ -81,7 +78,7 @@ No secrets in the repo. Each skill externalises credentials:
 - Python scripts use the skill's `.venv/bin/python` (not system Python)
 - Source `SKILL.md` commands use Claude-style absolute paths (`~/.claude/skills/<skill>/...`); `install-codex.sh` rewrites them for Codex installs
 - Error messages go to stderr, structured output (JSON) to stdout
-- All skills work offline except Outlook, Trello, Garmin, Humanize's commercial API engine, and Deep Research (which need API access)
+- All skills work offline except Garmin, Humanize's commercial API engine, and Deep Research (which need API access)
 
 ## Important Reminders
 

@@ -4,7 +4,7 @@
 # Usage:
 #   ./install-codex.sh              # Install all skills (interactive)
 #   ./install-codex.sh --all        # Install all skills (no prompts)
-#   ./install-codex.sh outlook      # Install specific skill(s)
+#   ./install-codex.sh garmin       # Install specific skill(s)
 #
 # Skill directories are installed into ~/.codex/skills/. Each installed
 # skill keeps the source directory live via symlinks, while SKILL.md is
@@ -15,7 +15,8 @@ set -e
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.codex/skills"
 
-AVAILABLE_SKILLS=(outlook trello repo-search pst-to-markdown email-search flaresolverr web-clipper garmin humanize)
+# Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
+AVAILABLE_SKILLS=(repo-search pst-to-markdown email-search flaresolverr web-clipper garmin humanize)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -28,36 +29,6 @@ info()  { echo -e "${BLUE}==>${NC} $*"; }
 ok()    { echo -e "${GREEN}✓${NC} $*"; }
 warn()  { echo -e "${YELLOW}!${NC} $*"; }
 err()   { echo -e "${RED}✗${NC} $*"; }
-
-check_deps_outlook() {
-    local missing=""
-    command -v az   &>/dev/null || missing="$missing azure-cli"
-    command -v jq   &>/dev/null || missing="$missing jq"
-    command -v curl &>/dev/null || missing="$missing curl"
-    if [ -n "$missing" ]; then
-        err "Missing dependencies for outlook:$missing"
-        echo "    macOS: brew install$missing"
-        echo "    Linux: sudo apt install$missing"
-        return 1
-    fi
-    if ! command -v pandoc &>/dev/null; then
-        warn "pandoc not found (optional — needed for markdown-formatted emails)"
-    fi
-    return 0
-}
-
-check_deps_trello() {
-    local missing=""
-    command -v jq   &>/dev/null || missing="$missing jq"
-    command -v curl &>/dev/null || missing="$missing curl"
-    if [ -n "$missing" ]; then
-        err "Missing dependencies for trello:$missing"
-        echo "    macOS: brew install$missing"
-        echo "    Linux: sudo apt install$missing"
-        return 1
-    fi
-    return 0
-}
 
 check_deps_repo_search() {
     if ! command -v python3 &>/dev/null; then
@@ -124,8 +95,6 @@ check_deps_humanize() {
 check_deps() {
     local skill="$1"
     case "$skill" in
-        outlook)        check_deps_outlook ;;
-        trello)         check_deps_trello ;;
         repo-search)    check_deps_repo_search ;;
         pst-to-markdown) check_deps_pst_to_markdown ;;
         email-search)   check_deps_email_search ;;
@@ -216,27 +185,6 @@ post_install() {
     local skill="$1"
 
     case "$skill" in
-        outlook)
-            chmod +x "$REPO_DIR/outlook/scripts/"*.sh 2>/dev/null || true
-            chmod +x "$REPO_DIR/outlook/install.sh" 2>/dev/null || true
-
-            if [ -f "$HOME/.outlook/credentials.json" ] || ls "$HOME"/.outlook/*/credentials.json >/dev/null 2>&1; then
-                ok "Outlook credentials found"
-            else
-                warn "No Outlook credentials — run: ~/.codex/skills/outlook/scripts/outlook-setup.sh"
-            fi
-            ;;
-
-        trello)
-            chmod +x "$REPO_DIR/trello/scripts/"*.sh 2>/dev/null || true
-
-            if [ -f "$HOME/.trello/config.json" ]; then
-                ok "Trello credentials found"
-            else
-                warn "No Trello credentials — run: ~/.codex/skills/trello/scripts/trello-setup.sh"
-            fi
-            ;;
-
         repo-search)
             chmod +x "$REPO_DIR/repo-search/setup.sh" 2>/dev/null || true
             chmod +x "$REPO_DIR/repo-search/ingest.py" 2>/dev/null || true
@@ -362,7 +310,7 @@ for arg in "$@"; do
             echo "Examples:"
             echo "  $0                    # Interactive — choose which skills to install"
             echo "  $0 --all              # Install everything"
-            echo "  $0 outlook trello     # Install specific skills"
+            echo "  $0 garmin web-clipper     # Install specific skills"
             exit 0
             ;;
         *)
@@ -392,7 +340,7 @@ elif [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
     echo
     read -p "Install all? (Y/n): " install_all
     if [[ "$install_all" =~ ^[Nn]$ ]]; then
-        read -p "Which skills? (space-separated, e.g. 'outlook trello'): " -a REQUESTED_SKILLS
+        read -p "Which skills? (space-separated, e.g. 'garmin web-clipper'): " -a REQUESTED_SKILLS
         if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
             echo "Nothing selected. Exiting."
             exit 0
