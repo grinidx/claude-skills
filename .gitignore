@@ -10,10 +10,6 @@ __pycache__/
 appsettings.*.json
 !appsettings.json
 
-# Credential directories (never commit these)
-.outlook/
-.trello/
-
 # Vector database
 .vectordb/
 email-archive-data/
