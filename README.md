@@ -31,7 +31,7 @@
 ## 🚀 Installation
 
 ```bash
-git clone https://github.com/dandcg/claude-skills.git
+git clone https://github.com/grinidx/claude-skills.git
 cd claude-skills
 
 # Install all skills for Claude (symlinks into ~/.claude/skills/)
