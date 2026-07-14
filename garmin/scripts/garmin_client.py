@@ -155,68 +155,50 @@ def get_client(
     config: dict,
     token_dir: str = DEFAULT_TOKEN_DIR,
 ) -> Garmin:
-    """Create an authenticated Garmin client.
+    """Create a Garmin client by resuming a cached session.
 
-    Tries cached tokens first, falls back to email/password login.
-    Saves tokens after successful credential-based login.
+    Resume-only by design. This never performs an SSO login, because doing so
+    non-interactively is what drove the account into a Cloudflare 429: it can
+    also demand an MFA code that no cron job can supply. Interactive login is
+    garmin_login.py's job.
 
     Args:
-        config: Dict with 'email' and 'password'.
-        token_dir: Directory for garth token storage.
+        config: Loaded config. Retained for signature compatibility with the
+            calling scripts; credentials are not used to log in here.
+        token_dir: Directory holding cached garth tokens.
 
     Returns:
-        Authenticated Garmin client instance.
+        Authenticated Garmin client.
+
+    Raises:
+        GarminAuthError: If the session cannot be resumed. The message names the
+            actual cause (no tokens / expired on <date> / rate limited).
     """
     token_path = Path(token_dir)
-    token_path.mkdir(parents=True, exist_ok=True)
 
-    # Try cached tokens first
-    if any(token_path.iterdir()):
-        try:
-            garmin = Garmin()
-            garmin.login(str(token_path))
-            return garmin
-        except Exception:
-            pass  # Fall through to credential login
-
-    # Credential-based login (requires MFA if account has it enabled)
-    # If MFA is needed and we're non-interactive, raise a clear error
-    # directing the user to run garmin_login.py first.
     try:
-        garmin = Garmin(
-            email=config["email"],
-            password=config["password"],
-            is_cn=False,
-        )
-        garmin.login()
-        garmin.garth.dump(str(token_path))
-        return garmin
-    except EOFError:
-        raise GarminConfigError(
-            "MFA required but running non-interactively.\n"
-            "Run this first to authenticate:\n"
-            "  ~/.claude/skills/garmin/.venv/bin/python "
-            "~/.claude/skills/garmin/scripts/garmin_login.py"
-        )
-    except Exception:
-        raise GarminConfigError(
-            "Login failed (rate limit or auth error).\n"
-            "Run login to re-authenticate:\n"
-            "  ~/.claude/skills/garmin/.venv/bin/python "
-            "~/.claude/skills/garmin/scripts/garmin_login.py"
-        )
+        garmin = Garmin()
+        garmin.login(str(token_path))
+    except Exception as exc:
+        raise GarminAuthError(describe_auth_failure(str(token_path), exc)) from exc
+
+    # login() may have refreshed the access token in memory. Persist it so the
+    # next run resumes cleanly instead of drifting towards a full re-login.
+    try:
+        garmin.client.dump(str(token_path))
+    except Exception as exc:
+        print(f"Warning: could not persist refreshed tokens: {exc}", file=sys.stderr)
+
+    return garmin
 
 
 if __name__ == "__main__":
-    """Quick auth test - run to verify credentials work."""
+    """Quick auth test - run to verify cached tokens work."""
     try:
         config = load_config()
         client = get_client(config)
         name = client.get_full_name()
         print(f"Authenticated as: {name}")
     except GarminConfigError as e:
-        print(f"Config error: {e}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"Auth error: {e}", file=sys.stderr)
+        print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

@@ -50,15 +50,12 @@ class TestLoadConfig:
 
 
 class TestGetClient:
-    """Test Garmin client creation with token caching."""
+    """get_client resumes from cached tokens and never performs an SSO login."""
 
     @patch("garmin_client.Garmin")
-    def test_loads_cached_tokens_first(self, MockGarmin, tmp_path):
-        """If tokens exist, should try loading them before using credentials."""
+    def test_resumes_from_cached_tokens(self, MockGarmin, tmp_path):
         token_dir = tmp_path / "tokens"
-        token_dir.mkdir()
-        # Create a dummy file so iterdir() finds something
-        (token_dir / "oauth_token").write_text("dummy")
+        _write_oauth2(token_dir, (datetime.now() + timedelta(days=10)).timestamp())
 
         mock_garmin = MagicMock()
         MockGarmin.return_value = mock_garmin
@@ -66,50 +63,65 @@ class TestGetClient:
         config = {"email": "test@example.com", "password": "secret123"}
         client = get_client(config, token_dir=str(token_dir))
 
-        # Should attempt token-based login
-        mock_garmin.login.assert_called_once_with(str(token_dir))
         assert client is mock_garmin
+        mock_garmin.login.assert_called_once_with(str(token_dir))
+        # Constructed WITHOUT credentials: this is what makes SSO unreachable.
+        MockGarmin.assert_called_once_with()
 
     @patch("garmin_client.Garmin")
-    def test_falls_back_to_credentials_on_token_failure(self, MockGarmin, tmp_path):
-        """If token login fails, should fall back to email/password."""
+    def test_never_attempts_credential_login(self, MockGarmin, tmp_path):
+        """The whole point: a failed resume must not fall back to SSO."""
         token_dir = tmp_path / "tokens"
-        token_dir.mkdir()
-        (token_dir / "oauth_token").write_text("dummy")
-
-        # First Garmin() instance: token login fails
-        mock_token_garmin = MagicMock()
-        mock_token_garmin.login.side_effect = Exception("Token expired")
-
-        # Second Garmin() instance: credential login succeeds
-        mock_cred_garmin = MagicMock()
-        mock_cred_garmin.login.return_value = ("", "")
-        mock_cred_garmin.garth = MagicMock()
-
-        MockGarmin.side_effect = [mock_token_garmin, mock_cred_garmin]
-
-        config = {"email": "test@example.com", "password": "secret123"}
-        client = get_client(config, token_dir=str(token_dir))
-
-        assert client is mock_cred_garmin
-        # Should have saved tokens after successful credential login
-        mock_cred_garmin.garth.dump.assert_called_once_with(str(token_dir))
-
-    @patch("garmin_client.Garmin")
-    def test_creates_token_dir_if_missing(self, MockGarmin, tmp_path):
-        """Token directory should be created if it doesn't exist."""
-        token_dir = tmp_path / "tokens"
-        # Don't create it - get_client should
+        _write_oauth2(token_dir, (datetime.now() - timedelta(days=30)).timestamp())
 
         mock_garmin = MagicMock()
-        mock_garmin.login.return_value = ("", "")
-        mock_garmin.garth = MagicMock()
+        mock_garmin.login.side_effect = Exception("Username and password are required")
         MockGarmin.return_value = mock_garmin
 
         config = {"email": "test@example.com", "password": "secret123"}
-        get_client(config, token_dir=str(token_dir))
+        with pytest.raises(GarminAuthError, match="expired"):
+            get_client(config, token_dir=str(token_dir))
 
-        assert token_dir.exists()
+        # Exactly one Garmin() -- no second, credential-bearing instance.
+        MockGarmin.assert_called_once_with()
+
+    @patch("garmin_client.Garmin")
+    def test_raises_not_authenticated_when_no_tokens(self, MockGarmin, tmp_path):
+        token_dir = tmp_path / "tokens"
+
+        mock_garmin = MagicMock()
+        mock_garmin.login.side_effect = Exception("Username and password are required")
+        MockGarmin.return_value = mock_garmin
+
+        with pytest.raises(GarminAuthError, match="Not authenticated"):
+            get_client({"email": "a@b.c", "password": "x"}, token_dir=str(token_dir))
+
+    @patch("garmin_client.Garmin")
+    def test_rate_limit_does_not_advise_relogin(self, MockGarmin, tmp_path):
+        token_dir = tmp_path / "tokens"
+        _write_oauth2(token_dir, (datetime.now() + timedelta(days=10)).timestamp())
+
+        mock_garmin = MagicMock()
+        mock_garmin.login.side_effect = Exception("Error 429: Too Many Requests")
+        MockGarmin.return_value = mock_garmin
+
+        with pytest.raises(GarminAuthError) as excinfo:
+            get_client({"email": "a@b.c", "password": "x"}, token_dir=str(token_dir))
+
+        assert "garmin_login.py" not in str(excinfo.value)
+
+    @patch("garmin_client.Garmin")
+    def test_persists_tokens_after_resume(self, MockGarmin, tmp_path):
+        """A resume may silently refresh the access token; persist it."""
+        token_dir = tmp_path / "tokens"
+        _write_oauth2(token_dir, (datetime.now() + timedelta(days=10)).timestamp())
+
+        mock_garmin = MagicMock()
+        MockGarmin.return_value = mock_garmin
+
+        get_client({"email": "a@b.c", "password": "x"}, token_dir=str(token_dir))
+
+        mock_garmin.client.dump.assert_called_once_with(str(token_dir))
 
 
 class TestGarminAuthErrorContract:
