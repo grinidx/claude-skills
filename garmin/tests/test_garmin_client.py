@@ -4,11 +4,19 @@ import json
 import pytest
 from unittest.mock import patch, MagicMock
 from pathlib import Path
+from datetime import datetime, timedelta
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from garmin_client import get_client, load_config, GarminConfigError
+from garmin_client import (
+    get_client,
+    load_config,
+    GarminConfigError,
+    GarminAuthError,
+    describe_auth_failure,
+    read_refresh_expiry,
+)
 
 
 class TestLoadConfig:
@@ -104,14 +112,31 @@ class TestGetClient:
         assert token_dir.exists()
 
 
-import json
-from datetime import datetime, timedelta
+class TestGarminAuthErrorContract:
+    """Test that GarminAuthError preserves the subclass contract required by CLI scripts."""
 
-from garmin_client import (
-    GarminAuthError,
-    describe_auth_failure,
-    read_refresh_expiry,
-)
+    def test_garmin_auth_error_is_subclass_of_config_error(self):
+        """GarminAuthError MUST subclass GarminConfigError.
+
+        All CLI scripts in garmin/scripts/ catch GarminConfigError
+        and rely on this to also catch auth errors, so breaking this
+        subclass relationship is a load-bearing bug.
+        """
+        assert issubclass(GarminAuthError, GarminConfigError)
+
+    def test_auth_error_caught_by_config_error_handler(self):
+        """Verify that except GarminConfigError: actually catches GarminAuthError.
+
+        This tests the actual behavior the CLI scripts rely on, not just
+        the type relationship.
+        """
+        caught = False
+        try:
+            raise GarminAuthError("test auth failure")
+        except GarminConfigError:
+            caught = True
+        assert caught, "GarminAuthError was not caught by except GarminConfigError"
+
 
 RELOGIN_HINT = "garmin_login.py"
 
