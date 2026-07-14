@@ -35,8 +35,11 @@ node_modules/
 # User-specific
 *.DotSettings.user
 
-# Deep-research outputs (created by the deep-research skill when run from this repo)
+# Deep-research outputs (created by the deep-research skill when run from this repo).
+# The skill resolves its output base to $DEEP_RESEARCH_OUTPUT, else <git-root>/docs/research
+# -- so /docs/research/ is the path that actually gets written when it runs from here.
 /research/
+/docs/research/
 
 # deep-research scratch output (real reports go to the calling repo)
 deep-research/temp_research_output/
