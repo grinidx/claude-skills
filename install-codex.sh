@@ -16,7 +16,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.codex/skills"
 
 # Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
-AVAILABLE_SKILLS=(repo-search pst-to-markdown email-search flaresolverr web-clipper garmin humanize)
+AVAILABLE_SKILLS=(pst-to-markdown flaresolverr garmin humanize)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -29,14 +29,6 @@ info()  { echo -e "${BLUE}==>${NC} $*"; }
 ok()    { echo -e "${GREEN}✓${NC} $*"; }
 warn()  { echo -e "${YELLOW}!${NC} $*"; }
 err()   { echo -e "${RED}✗${NC} $*"; }
-
-check_deps_repo_search() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for repo-search: python3"
-        return 1
-    fi
-    return 0
-}
 
 check_deps_pst_to_markdown() {
     if ! command -v python3 &>/dev/null; then
@@ -51,26 +43,10 @@ check_deps_pst_to_markdown() {
     return 0
 }
 
-check_deps_email_search() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for email-search: python3"
-        return 1
-    fi
-    return 0
-}
-
 check_deps_flaresolverr() {
     if ! command -v docker &>/dev/null; then
         err "Missing dependency for flaresolverr: docker"
         echo "    Install Docker Desktop and enable WSL integration"
-        return 1
-    fi
-    return 0
-}
-
-check_deps_web_clipper() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for web-clipper: python3"
         return 1
     fi
     return 0
@@ -95,11 +71,8 @@ check_deps_humanize() {
 check_deps() {
     local skill="$1"
     case "$skill" in
-        repo-search)    check_deps_repo_search ;;
         pst-to-markdown) check_deps_pst_to_markdown ;;
-        email-search)   check_deps_email_search ;;
         flaresolverr)   check_deps_flaresolverr ;;
-        web-clipper)    check_deps_web_clipper ;;
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
         *)              return 0 ;;
@@ -185,20 +158,6 @@ post_install() {
     local skill="$1"
 
     case "$skill" in
-        repo-search)
-            chmod +x "$REPO_DIR/repo-search/setup.sh" 2>/dev/null || true
-            chmod +x "$REPO_DIR/repo-search/ingest.py" 2>/dev/null || true
-            chmod +x "$REPO_DIR/repo-search/query.py" 2>/dev/null || true
-
-            if [ ! -d "$REPO_DIR/repo-search/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/repo-search/setup.sh"
-            else
-                ok "Python venv already exists"
-                "$REPO_DIR/repo-search/.venv/bin/pip" install -r "$REPO_DIR/repo-search/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
-
         pst-to-markdown)
             chmod +x "$REPO_DIR/pst-to-markdown/setup.sh" 2>/dev/null || true
             chmod +x "$REPO_DIR/pst-to-markdown/scripts/extract_pst.py" 2>/dev/null || true
@@ -209,18 +168,6 @@ post_install() {
             else
                 ok "Python venv already exists"
                 "$REPO_DIR/pst-to-markdown/.venv/bin/pip" install -r "$REPO_DIR/pst-to-markdown/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
-
-        email-search)
-            chmod +x "$REPO_DIR/email-search/setup.sh" 2>/dev/null || true
-
-            if [ ! -d "$REPO_DIR/email-search/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/email-search/setup.sh"
-            else
-                ok "Python venv already exists"
-                "$REPO_DIR/email-search/.venv/bin/pip" install -e "$REPO_DIR/email-search" -q 2>/dev/null || true
             fi
             ;;
 
@@ -236,16 +183,6 @@ post_install() {
             fi
             ;;
 
-        web-clipper)
-            chmod +x "$REPO_DIR/web-clipper/setup.sh" 2>/dev/null || true
-            if [ ! -d "$REPO_DIR/web-clipper/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/web-clipper/setup.sh"
-            else
-                ok "Python venv already exists"
-                "$REPO_DIR/web-clipper/.venv/bin/pip" install -r "$REPO_DIR/web-clipper/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
 
         garmin)
             chmod +x "$REPO_DIR/garmin/scripts/setup.sh" 2>/dev/null || true
@@ -310,7 +247,7 @@ for arg in "$@"; do
             echo "Examples:"
             echo "  $0                    # Interactive — choose which skills to install"
             echo "  $0 --all              # Install everything"
-            echo "  $0 garmin web-clipper     # Install specific skills"
+            echo "  $0 garmin humanize        # Install specific skills"
             exit 0
             ;;
         *)
@@ -340,7 +277,7 @@ elif [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
     echo
     read -p "Install all? (Y/n): " install_all
     if [[ "$install_all" =~ ^[Nn]$ ]]; then
-        read -p "Which skills? (space-separated, e.g. 'garmin web-clipper'): " -a REQUESTED_SKILLS
+        read -p "Which skills? (space-separated, e.g. 'garmin humanize'): " -a REQUESTED_SKILLS
         if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
             echo "Nothing selected. Exiting."
             exit 0

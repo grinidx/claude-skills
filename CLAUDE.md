@@ -6,9 +6,7 @@ A collection of skills that extend Claude and Codex with external service integr
 
 ```
 claude-skills/
-├── repo-search/      # Semantic search over markdown files (Python/ChromaDB)
 ├── pst-to-markdown/  # PST to markdown extraction (Python)
-├── email-search/     # PST ingestion + vector search + analytics (Python/ChromaDB)
 ├── garmin/           # Garmin Connect health & fitness data (Python/garminconnect)
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)

@@ -5,7 +5,7 @@
 #   ./install.sh              # Install all skills (interactive)
 #   ./install.sh --all        # Install all skills (no prompts)
 #   ./install.sh garmin       # Install specific skill(s)
-#   ./install.sh web-clipper repo-search
+#   ./install.sh garmin humanize
 #
 # Skills are symlinked into ~/.claude/skills/ so edits to this repo
 # are immediately available to Claude Code — no re-install needed.
@@ -17,7 +17,7 @@ SKILLS_DIR="$HOME/.claude/skills"
 
 # All available Claude Code skills (have SKILL.md)
 # Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
-AVAILABLE_SKILLS=(repo-search pst-to-markdown email-search web-clipper garmin humanize gpt-image-2 deep-research)
+AVAILABLE_SKILLS=(pst-to-markdown garmin humanize gpt-image-2 deep-research)
 
 # Colours
 GREEN='\033[0;32m'
@@ -34,14 +34,6 @@ err()   { echo -e "${RED}✗${NC} $*"; }
 
 # ─── Dependency checks ───────────────────────────────────────────────
 
-check_deps_repo_search() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for repo-search: python3"
-        return 1
-    fi
-    return 0
-}
-
 check_deps_pst_to_markdown() {
     if ! command -v python3 &>/dev/null; then
         err "Missing dependency for pst-to-markdown: python3"
@@ -51,22 +43,6 @@ check_deps_pst_to_markdown() {
         warn "readpst not found (optional — needed if libratom fails)"
         echo "    Ubuntu/Debian: sudo apt install pst-utils"
         echo "    macOS: brew install libpst"
-    fi
-    return 0
-}
-
-check_deps_email_search() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for email-search: python3"
-        return 1
-    fi
-    return 0
-}
-
-check_deps_web_clipper() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for web-clipper: python3"
-        return 1
     fi
     return 0
 }
@@ -114,10 +90,7 @@ check_deps_deep_research() {
 check_deps() {
     local skill="$1"
     case "$skill" in
-        repo-search)    check_deps_repo_search ;;
         pst-to-markdown) check_deps_pst_to_markdown ;;
-        email-search)   check_deps_email_search ;;
-        web-clipper)    check_deps_web_clipper ;;
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
         gpt-image-2)    check_deps_gpt_image_2 ;;
@@ -187,22 +160,6 @@ post_install() {
     local skill="$1"
 
     case "$skill" in
-        repo-search)
-            chmod +x "$REPO_DIR/repo-search/setup.sh" 2>/dev/null || true
-            chmod +x "$REPO_DIR/repo-search/ingest.py" 2>/dev/null || true
-            chmod +x "$REPO_DIR/repo-search/query.py" 2>/dev/null || true
-
-            # Set up Python venv if needed
-            if [ ! -d "$REPO_DIR/repo-search/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/repo-search/setup.sh"
-            else
-                ok "Python venv already exists"
-                # Update deps quietly
-                "$REPO_DIR/repo-search/.venv/bin/pip" install -r "$REPO_DIR/repo-search/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
-
         pst-to-markdown)
             chmod +x "$REPO_DIR/pst-to-markdown/setup.sh" 2>/dev/null || true
             chmod +x "$REPO_DIR/pst-to-markdown/scripts/extract_pst.py" 2>/dev/null || true
@@ -215,31 +172,6 @@ post_install() {
                 ok "Python venv already exists"
                 # Update deps quietly
                 "$REPO_DIR/pst-to-markdown/.venv/bin/pip" install -r "$REPO_DIR/pst-to-markdown/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
-
-        email-search)
-            chmod +x "$REPO_DIR/email-search/setup.sh" 2>/dev/null || true
-
-            # Set up Python venv if needed
-            if [ ! -d "$REPO_DIR/email-search/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/email-search/setup.sh"
-            else
-                ok "Python venv already exists"
-                # Update deps quietly
-                "$REPO_DIR/email-search/.venv/bin/pip" install -e "$REPO_DIR/email-search" -q 2>/dev/null || true
-            fi
-            ;;
-
-        web-clipper)
-            chmod +x "$REPO_DIR/web-clipper/setup.sh" 2>/dev/null || true
-            if [ ! -d "$REPO_DIR/web-clipper/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/web-clipper/setup.sh"
-            else
-                ok "Python venv already exists"
-                "$REPO_DIR/web-clipper/.venv/bin/pip" install -r "$REPO_DIR/web-clipper/requirements.txt" -q 2>/dev/null || true
             fi
             ;;
 
@@ -357,7 +289,7 @@ for arg in "$@"; do
             echo "Examples:"
             echo "  $0                    # Interactive — choose which skills to install"
             echo "  $0 --all              # Install everything"
-            echo "  $0 garmin web-clipper     # Install specific skills"
+            echo "  $0 garmin humanize        # Install specific skills"
             exit 0
             ;;
         *)
@@ -391,7 +323,7 @@ elif [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
     echo
     read -p "Install all? (Y/n): " install_all
     if [[ "$install_all" =~ ^[Nn]$ ]]; then
-        read -p "Which skills? (space-separated, e.g. 'garmin web-clipper'): " -a REQUESTED_SKILLS
+        read -p "Which skills? (space-separated, e.g. 'garmin humanize'): " -a REQUESTED_SKILLS
         if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
             echo "Nothing selected. Exiting."
             exit 0

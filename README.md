@@ -17,10 +17,7 @@
 
 | Skill | Description |
 |-------|-------------|
-| 🔍 **[Repo Search](./repo-search/)** | ChromaDB semantic search across markdown, PDF, DOCX & XLSX — find by meaning, filter by area/date, build summaries |
 | 📨 **[PST to Markdown](./pst-to-markdown/)** | Extract Outlook PST archives into organised markdown with YAML frontmatter & integrity verification |
-| 📧 **[Email Search](./email-search/)** | Ingest PST archives into ChromaDB — semantic search, analytics, timelines, top contacts, export |
-| 📎 **[Web Clipper](./web-clipper/)** | Clip web pages to markdown with YAML frontmatter — clean extraction, Cloudflare bypass, tagging, full-text search, repo-search integration |
 | ⌚ **[Garmin](./garmin/)** | Garmin Connect health & fitness data — Body Battery, HRV, sleep, activities, VO2 max, training load/readiness, daily snapshots & weekly rollups |
 | ✍️ **[Humanize](./humanize/)** | Rewrite AI-generated text to sound natural in British English — 29+ AI tells across 5 categories with before/after examples, tone presets (neutral/casual/professional/academic), self-audit dual prompt, optional Undetectable AI API |
 | 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
@@ -41,8 +38,8 @@ cd claude-skills
 ./install-codex.sh --all
 
 # Or pick specific ones
-./install.sh garmin web-clipper
-./install-codex.sh garmin web-clipper
+./install.sh garmin humanize
+./install-codex.sh garmin humanize
 
 # Or interactive mode
 ./install.sh
@@ -73,10 +70,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 
 | Skill | Credential Location | Setup |
 |-------|---------------------|-------|
-| 🔍 Repo Search | None (local only) | `repo-search/setup.sh` |
 | 📨 PST to Markdown | None (local only) | `pst-to-markdown/setup.sh` |
-| 📧 Email Search | None (local only) | `email-search/setup.sh` |
-| 📎 Web Clipper | None (local only) | `web-clipper/setup.sh` |
 | ⌚ Garmin | `~/.garmin/` | `garmin/scripts/setup.sh` |
 | ✍️ Humanize | `~/.humanize/` (optional) | `humanize/scripts/setup.sh` |
 | 🎨 GPT Image 2 | `$OPENAI_API_KEY` env var | `gpt-image-2/setup.sh` |
