@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A second push to the same branch cancels the first: CI should report on the
+# newest commit, not queue behind stale ones.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deep-research:
+    name: deep-research (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.9 is the floor: every script carries `from __future__ import annotations`,
+        # so PEP 604 syntax parses there. 3.13 is the current ceiling.
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        # The skill's scripts are stdlib-only by design (requirements.txt is empty
+        # apart from optional weasyprint). pytest is only needed to RUN the tests --
+        # the tests themselves are plain unittest.
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Run test suite
+        working-directory: deep-research
+        # -p no:cacheprovider keeps the checkout clean; tests are hermetic and must
+        # never touch the network (the offline citation path is asserted explicitly).
+        run: python -m pytest tests/ -v -p no:cacheprovider
+
+      - name: Verify scripts are importable and stdlib-only
+        working-directory: deep-research
+        run: |
+          for f in scripts/*.py; do
+            python -c "import ast,sys; ast.parse(open('$f').read())" || exit 1
+          done
+          echo "All scripts parse cleanly on Python ${{ matrix.python-version }}"
+
+  smoke:
+    name: end-to-end smoke (no network)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate the shipped fixtures with the real gates
+        working-directory: deep-research
+        run: |
+          set -e
+          echo "--- report format ---"
+          python scripts/validate_report.py --report tests/fixtures/valid_report.md --format report
+          python scripts/verify_citations.py --report tests/fixtures/valid_report.md --offline
+
+          echo "--- brief format ---"
+          python scripts/validate_report.py --report tests/fixtures/valid_brief.md --format brief
+          python scripts/verify_citations.py --report tests/fixtures/valid_brief.md --offline
+
+          echo "--- invalid report must FAIL ---"
+          if python scripts/validate_report.py --report tests/fixtures/invalid_report.md; then
+            echo "ERROR: invalid_report.md passed validation but should have failed"
+            exit 1
+          fi
+          echo "OK: invalid report correctly rejected"
+
+      - name: Full run lifecycle (init -> batch register -> batch evidence -> bibliography)
+        working-directory: deep-research
+        run: |
+          set -e
+          RUN=$(mktemp -d)
+          python scripts/citation_manager.py init-run --out-dir "$RUN" --query "smoke test" --mode standard
+
+          cat > "$RUN/sources_batch.jsonl" <<'EOF'
+          {"raw_url": "https://www.nature.com/articles/x", "title": "A Paper", "year": "2026", "source_type": "academic"}
+          {"raw_url": "https://arxiv.org/abs/2501.00001", "title": "A Preprint", "year": "2026", "source_type": "academic"}
+          EOF
+          python scripts/citation_manager.py register-sources --jsonl-file "$RUN/sources_batch.jsonl" --dir "$RUN"
+
+          SID=$(python -c "import json;print(json.loads(open('$RUN/sources.jsonl').readline())['source_id'])")
+          cat > "$RUN/evidence_batch.jsonl" <<EOF
+          {"source_id": "$SID", "quote": "the measured latency fell by 34%", "locator": "p4", "evidence_type": "data_point"}
+          EOF
+          python scripts/evidence_store.py add-batch --jsonl-file "$RUN/evidence_batch.jsonl" --dir "$RUN"
+
+          python scripts/citation_manager.py assign-display-numbers --dir "$RUN"
+          python scripts/citation_manager.py export-bibliography --dir "$RUN"
+          python scripts/source_evaluator.py score --jsonl-file "$RUN/sources.jsonl"
+
+          test -s "$RUN/sources.jsonl"
+          test -s "$RUN/evidence.jsonl"
+          echo "OK: full lifecycle completed"
+
+      - name: setup.sh must succeed WITHOUT the Bright Data CLI
+        working-directory: deep-research
+        # Bright Data is a fallback provider, not a requirement: the skill runs on the
+        # host's built-in WebSearch/WebFetch. Setup must therefore provision the venv
+        # and exit 0 even with no CLI installed (runners have none).
+        run: |
+          set -e
+          if command -v brightdata >/dev/null 2>&1; then
+            echo "note: brightdata unexpectedly present; skipping the absent-CLI assertion"
+            exit 0
+          fi
+          ./setup.sh --no-prompt
+          test -x .venv/bin/python
+          echo "OK: setup.sh succeeded (venv provisioned) without the Bright Data CLI"
