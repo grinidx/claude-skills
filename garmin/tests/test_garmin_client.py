@@ -102,3 +102,82 @@ class TestGetClient:
         get_client(config, token_dir=str(token_dir))
 
         assert token_dir.exists()
+
+
+import json
+from datetime import datetime, timedelta
+
+from garmin_client import (
+    GarminAuthError,
+    describe_auth_failure,
+    read_refresh_expiry,
+)
+
+RELOGIN_HINT = "garmin_login.py"
+
+
+def _write_oauth2(token_dir, expires_at):
+    token_dir.mkdir(parents=True, exist_ok=True)
+    (token_dir / "oauth2_token.json").write_text(
+        json.dumps({"refresh_token_expires_at": expires_at})
+    )
+
+
+class TestReadRefreshExpiry:
+    def test_returns_none_when_token_dir_missing(self, tmp_path):
+        assert read_refresh_expiry(str(tmp_path / "nope")) is None
+
+    def test_returns_none_when_field_absent(self, tmp_path):
+        token_dir = tmp_path / "tokens"
+        token_dir.mkdir()
+        (token_dir / "oauth2_token.json").write_text(json.dumps({"scope": "x"}))
+        assert read_refresh_expiry(str(token_dir)) is None
+
+    def test_returns_none_on_corrupt_json(self, tmp_path):
+        token_dir = tmp_path / "tokens"
+        token_dir.mkdir()
+        (token_dir / "oauth2_token.json").write_text("{not json")
+        assert read_refresh_expiry(str(token_dir)) is None
+
+    def test_reads_expiry_timestamp(self, tmp_path):
+        token_dir = tmp_path / "tokens"
+        expected = datetime(2026, 3, 25, 10, 25, 14)
+        _write_oauth2(token_dir, expected.timestamp())
+        assert read_refresh_expiry(str(token_dir)) == expected
+
+
+class TestAuthFailureClassification:
+    def test_no_tokens_says_not_authenticated(self, tmp_path):
+        msg = describe_auth_failure(str(tmp_path / "tokens"), Exception("boom"))
+        assert "Not authenticated" in msg
+        assert RELOGIN_HINT in msg
+
+    def test_expired_tokens_report_the_expiry_date(self, tmp_path):
+        token_dir = tmp_path / "tokens"
+        expired = datetime.now() - timedelta(days=30)
+        _write_oauth2(token_dir, expired.timestamp())
+
+        msg = describe_auth_failure(str(token_dir), Exception("boom"))
+
+        assert "expired" in msg.lower()
+        assert expired.date().isoformat() in msg
+        assert RELOGIN_HINT in msg
+
+    def test_rate_limit_does_not_advise_relogin(self, tmp_path):
+        """A 429 must NOT tell the user to log in again -- that deepens the block."""
+        token_dir = tmp_path / "tokens"
+        _write_oauth2(token_dir, (datetime.now() + timedelta(days=10)).timestamp())
+
+        msg = describe_auth_failure(str(token_dir), Exception("Error 429: Too Many Requests"))
+
+        assert "rate-limit" in msg.lower() or "rate limit" in msg.lower()
+        assert RELOGIN_HINT not in msg
+
+    def test_unknown_error_is_surfaced_verbatim(self, tmp_path):
+        token_dir = tmp_path / "tokens"
+        _write_oauth2(token_dir, (datetime.now() + timedelta(days=10)).timestamp())
+
+        msg = describe_auth_failure(str(token_dir), Exception("kaboom specifics"))
+
+        assert "kaboom specifics" in msg
+        assert RELOGIN_HINT in msg
