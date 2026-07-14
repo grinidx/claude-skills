@@ -16,7 +16,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.codex/skills"
 
 # Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
-AVAILABLE_SKILLS=(pst-to-markdown flaresolverr garmin humanize)
+AVAILABLE_SKILLS=(pst-to-markdown garmin humanize)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -43,15 +43,6 @@ check_deps_pst_to_markdown() {
     return 0
 }
 
-check_deps_flaresolverr() {
-    if ! command -v docker &>/dev/null; then
-        err "Missing dependency for flaresolverr: docker"
-        echo "    Install Docker Desktop and enable WSL integration"
-        return 1
-    fi
-    return 0
-}
-
 check_deps_garmin() {
     if ! command -v python3 &>/dev/null; then
         err "Missing dependency for garmin: python3"
@@ -72,7 +63,6 @@ check_deps() {
     local skill="$1"
     case "$skill" in
         pst-to-markdown) check_deps_pst_to_markdown ;;
-        flaresolverr)   check_deps_flaresolverr ;;
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
         *)              return 0 ;;
@@ -168,18 +158,6 @@ post_install() {
             else
                 ok "Python venv already exists"
                 "$REPO_DIR/pst-to-markdown/.venv/bin/pip" install -r "$REPO_DIR/pst-to-markdown/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
-
-        flaresolverr)
-            chmod +x "$REPO_DIR/flaresolverr/scripts/"*.sh 2>/dev/null || true
-
-            if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^flaresolverr$"; then
-                ok "FlareSolverr container is running"
-            elif docker ps -a --format '{{.Names}}' 2>/dev/null | grep -q "^flaresolverr$"; then
-                warn "FlareSolverr container exists but is stopped — run: docker start flaresolverr"
-            else
-                warn "FlareSolverr container not created — run: ~/.codex/skills/flaresolverr/scripts/flaresolverr-ensure.sh"
             fi
             ;;
 
