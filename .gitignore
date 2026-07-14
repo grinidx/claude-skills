@@ -37,3 +37,6 @@ node_modules/
 
 # Deep-research outputs (created by the deep-research skill when run from this repo)
 /research/
+
+# deep-research scratch output (real reports go to the calling repo)
+deep-research/temp_research_output/
