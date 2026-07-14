@@ -534,6 +534,7 @@ git commit -m "fix(garmin): make get_client resume-only and repair .garth call s
 Every fetcher catches all exceptions and returns `None`/`[]`, so a rate-limited or offline run looks exactly like a day the watch was not worn. This task teaches them the difference. Absent data still returns `None`; a hard failure raises `GarminFetchError`.
 
 **Files:**
+- Create: `garmin/tests/conftest.py` (shared `fake_http_error` fixture)
 - Modify: `garmin/scripts/garmin_health.py:43-48` (`_safe_call`)
 - Modify: `garmin/scripts/garmin_sleep.py:68-73` (`fetch_sleep`)
 - Modify: `garmin/scripts/garmin_activities.py:152-174` (`fetch_activities`, `fetch_training`)
@@ -549,7 +550,38 @@ Every fetcher catches all exceptions and returns `None`/`[]`, so a rate-limited 
 
 A 404 from Garmin means "nothing recorded for this date" and is the one error that is *not* a failure. `garth.exc.GarthHTTPError` wraps the underlying `requests` response, so the status code is reachable at `exc.error.response.status_code`.
 
-- [ ] **Step 1: Write the failing tests**
+- [ ] **Step 1: Create the shared test double**
+
+All three test files need the same stand-in for `garth.exc.GarthHTTPError`. Define it **once** in a new `garmin/tests/conftest.py` and expose it as a fixture, so no test file has to import it:
+
+```python
+"""Shared test fixtures for the garmin skill."""
+
+from unittest.mock import MagicMock
+
+import pytest
+
+
+class FakeHTTPError(Exception):
+    """Stands in for garth.exc.GarthHTTPError, which wraps a requests response.
+
+    The skill reads the status code at exc.error.response.status_code to tell
+    "no data for this date" (404) apart from a real failure (429, 5xx, ...).
+    """
+
+    def __init__(self, status_code):
+        super().__init__(f"HTTP {status_code}")
+        self.error = MagicMock()
+        self.error.response.status_code = status_code
+
+
+@pytest.fixture
+def fake_http_error():
+    """The FakeHTTPError class itself, so tests can raise it with a status code."""
+    return FakeHTTPError
+```
+
+- [ ] **Step 2: Write the failing tests**
 
 Append to `garmin/tests/test_garmin_health.py`:
 
@@ -562,29 +594,20 @@ from garmin_client import GarminFetchError
 from garmin_health import _safe_call, fetch_day_data
 
 
-class _FakeHTTPError(Exception):
-    """Stands in for garth.exc.GarthHTTPError, which wraps a requests response."""
-
-    def __init__(self, status_code):
-        super().__init__(f"HTTP {status_code}")
-        self.error = MagicMock()
-        self.error.response.status_code = status_code
-
-
 class TestSafeCall:
     def test_returns_value_on_success(self):
         assert _safe_call(lambda: {"restingHeartRate": 52}) == {"restingHeartRate": 52}
 
-    def test_returns_none_when_garmin_has_no_data(self):
+    def test_returns_none_when_garmin_has_no_data(self, fake_http_error):
         """404 means 'nothing recorded that day' -- absence, not failure."""
         def not_found():
-            raise _FakeHTTPError(404)
+            raise fake_http_error(404)
 
         assert _safe_call(not_found) is None
 
-    def test_raises_on_rate_limit(self):
+    def test_raises_on_rate_limit(self, fake_http_error):
         def rate_limited():
-            raise _FakeHTTPError(429)
+            raise fake_http_error(429)
 
         with pytest.raises(GarminFetchError):
             _safe_call(rate_limited)
@@ -598,10 +621,10 @@ class TestSafeCall:
 
 
 class TestFetchDayData:
-    def test_propagates_failure_rather_than_returning_empty(self):
+    def test_propagates_failure_rather_than_returning_empty(self, fake_http_error):
         """The silent-data-loss guard: a failed fetch must not look like an empty day."""
         client = MagicMock()
-        client.get_stats.side_effect = _FakeHTTPError(429)
+        client.get_stats.side_effect = fake_http_error(429)
 
         with pytest.raises(GarminFetchError):
             fetch_day_data(client, "2026-07-14")
@@ -618,22 +641,15 @@ from garmin_client import GarminFetchError
 from garmin_sleep import fetch_sleep
 
 
-class _FakeHTTPError(Exception):
-    def __init__(self, status_code):
-        super().__init__(f"HTTP {status_code}")
-        self.error = MagicMock()
-        self.error.response.status_code = status_code
-
-
 class TestFetchSleep:
-    def test_returns_none_when_no_sleep_recorded(self):
+    def test_returns_none_when_no_sleep_recorded(self, fake_http_error):
         client = MagicMock()
-        client.get_sleep_data.side_effect = _FakeHTTPError(404)
+        client.get_sleep_data.side_effect = fake_http_error(404)
         assert fetch_sleep(client, "2026-07-14") is None
 
-    def test_raises_on_hard_failure(self):
+    def test_raises_on_hard_failure(self, fake_http_error):
         client = MagicMock()
-        client.get_sleep_data.side_effect = _FakeHTTPError(429)
+        client.get_sleep_data.side_effect = fake_http_error(429)
         with pytest.raises(GarminFetchError):
             fetch_sleep(client, "2026-07-14")
 ```
@@ -647,40 +663,33 @@ from garmin_client import GarminFetchError
 from garmin_activities import fetch_activities, fetch_training
 
 
-class _FakeHTTPError(Exception):
-    def __init__(self, status_code):
-        super().__init__(f"HTTP {status_code}")
-        self.error = MagicMock()
-        self.error.response.status_code = status_code
-
-
 class TestFetchActivities:
     def test_returns_empty_list_when_none_recorded(self):
         client = MagicMock()
         client.get_activities_by_date.return_value = []
         assert fetch_activities(client, days=7) == []
 
-    def test_raises_on_hard_failure(self):
+    def test_raises_on_hard_failure(self, fake_http_error):
         client = MagicMock()
-        client.get_activities_by_date.side_effect = _FakeHTTPError(429)
+        client.get_activities_by_date.side_effect = fake_http_error(429)
         with pytest.raises(GarminFetchError):
             fetch_activities(client, days=7)
 
 
 class TestFetchTraining:
-    def test_raises_on_hard_failure(self):
+    def test_raises_on_hard_failure(self, fake_http_error):
         client = MagicMock()
-        client.get_training_status.side_effect = _FakeHTTPError(500)
+        client.get_training_status.side_effect = fake_http_error(500)
         with pytest.raises(GarminFetchError):
             fetch_training(client, "2026-07-14")
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `cd garmin && ~/.claude/skills/garmin/.venv/bin/python -m pytest tests/test_garmin_health.py tests/test_garmin_sleep.py tests/test_garmin_activities.py -v -k "SafeCall or FetchDayData or FetchSleep or FetchActivities or FetchTraining"`
 Expected: FAIL — the fetchers currently swallow everything and return `None`/`[]`, so every `pytest.raises` block fails.
 
-- [ ] **Step 3: Implement the shared error policy in garmin_health.py**
+- [ ] **Step 4: Implement the shared error policy in garmin_health.py**
 
 Replace `garmin/scripts/garmin_health.py:43-48`. Also add `from garmin_client import GarminFetchError` to the existing `garmin_client` import on line 18.
 
@@ -715,7 +724,7 @@ def _safe_call(fn, *args, **kwargs):
 
 `fetch_day_data` (lines 21-40) needs no change: it calls `_safe_call`, which now raises.
 
-- [ ] **Step 4: Apply the same policy in garmin_sleep.py**
+- [ ] **Step 5: Apply the same policy in garmin_sleep.py**
 
 Replace `garmin/scripts/garmin_sleep.py:68-73`, and add the import below line 17:
 
@@ -737,7 +746,7 @@ def fetch_sleep(client, cdate: str) -> dict | None:
         raise GarminFetchError(f"Could not fetch sleep for {cdate}: {exc}") from exc
 ```
 
-- [ ] **Step 5: Apply the same policy in garmin_activities.py**
+- [ ] **Step 6: Apply the same policy in garmin_activities.py**
 
 Replace `garmin/scripts/garmin_activities.py:152-174`, and extend the import on line 17 to include `GarminFetchError`, adding `from garmin_health import _is_not_found`:
 
@@ -773,12 +782,12 @@ def fetch_training(client, cdate: str) -> tuple[dict | None, dict | None]:
     return _call(client.get_training_status), _call(client.get_training_readiness)
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [ ] **Step 7: Run the tests to verify they pass**
 
 Run: `cd garmin && ~/.claude/skills/garmin/.venv/bin/python -m pytest tests/ -v`
 Expected: all pass except the known-stale `test_formats_multiple_activities` (Task 6).
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add garmin/scripts/garmin_health.py garmin/scripts/garmin_sleep.py garmin/scripts/garmin_activities.py garmin/tests/
