@@ -10,9 +10,10 @@ claude-skills/
 ├── garmin/           # Garmin Connect health & fitness data (Python/garminconnect)
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
-├── deep-research/    # Multi-source web research via the Bright Data CLI (Python wrapper)
+├── deep-research/    # Multi-source web research (built-in WebSearch first, Bright Data fallback)
 ├── install.sh        # Claude installer (symlinks into ~/.claude/skills)
 ├── install-codex.sh  # Codex installer (installs into ~/.codex/skills)
+├── .github/workflows/ci.yml  # CI: deep-research tests (py3.9-3.13) + e2e smoke
 └── README.md         # User-facing documentation
 ```
 
@@ -63,7 +64,7 @@ No secrets in the repo. Each skill externalises credentials:
 | Garmin | `~/.garmin/` |
 | Humanize | `~/.humanize/` (optional, for commercial API) |
 | GPT Image 2 | `$OPENAI_API_KEY` env var |
-| Deep Research | Managed by the Bright Data CLI (`brightdata login`, or `BRIGHTDATA_API_KEY`) |
+| Deep Research | None required (built-in WebSearch is primary). Optional fallback: Bright Data CLI (`brightdata login`, or `BRIGHTDATA_API_KEY`) |
 
 ### Dependencies
 
@@ -76,7 +77,7 @@ No secrets in the repo. Each skill externalises credentials:
 - Python scripts use the skill's `.venv/bin/python` (not system Python)
 - Source `SKILL.md` commands use Claude-style absolute paths (`~/.claude/skills/<skill>/...`); `install-codex.sh` rewrites them for Codex installs
 - Error messages go to stderr, structured output (JSON) to stdout
-- All skills work offline except Garmin, Humanize's commercial API engine, and Deep Research (which need API access)
+- All skills work offline except Garmin, Humanize's commercial API engine, and Deep Research (which needs web access, though no API key of its own)
 
 ## Important Reminders
 

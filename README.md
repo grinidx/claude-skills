@@ -21,7 +21,7 @@
 | ⌚ **[Garmin](./garmin/)** | Garmin Connect health & fitness data — Body Battery, HRV, sleep, activities, VO2 max, training load/readiness, daily snapshots & weekly rollups |
 | ✍️ **[Humanize](./humanize/)** | Rewrite AI-generated text to sound natural in British English — 29+ AI tells across 5 categories with before/after examples, tone presets (neutral/casual/professional/academic), self-audit dual prompt, optional Undetectable AI API |
 | 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
-| 🔬 **[Deep Research](./deep-research/)** | Multi-source web research with citation tracking, evidence persistence, and structured report generation — Bright Data CLI backend (SERP + Web Unlocker), quick/standard/deep/ultradeep modes, deterministic credibility re-ranking |
+| 🔬 **[Deep Research](./deep-research/)** | Multi-source web research with citation tracking and evidence persistence. Built-in WebSearch first (free); Bright Data CLI as a paid fallback for blocked pages, Reddit, and geo SERP. Brief-by-default deliverables, quick/standard/deep/ultradeep modes, mode-scaled cost, user-tunable credibility re-ranking |
 
 > **Moved:** the **Outlook** and **Trello** skills now live in their own repositories under [github.com/dbhq-uk](https://github.com/dbhq-uk) - install them via the DBHQ marketplace (`/plugin marketplace add dbhq-uk/marketplace`) or from [dbhq-uk/outlook](https://github.com/dbhq-uk/outlook) and [dbhq-uk/trello](https://github.com/dbhq-uk/trello).
 
@@ -74,7 +74,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | ⌚ Garmin | `~/.garmin/` | `garmin/scripts/setup.sh` |
 | ✍️ Humanize | `~/.humanize/` (optional) | `humanize/scripts/setup.sh` |
 | 🎨 GPT Image 2 | `$OPENAI_API_KEY` env var | `gpt-image-2/setup.sh` |
-| 🔬 Deep Research | Managed by the Bright Data CLI (`brightdata login`) | `deep-research/setup.sh` |
+| 🔬 Deep Research | None required. Optional: Bright Data CLI (`brightdata login`) for the fallback provider | `deep-research/setup.sh` |
 
 ## ⚙️ Requirements
 
@@ -87,7 +87,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | ⌚ Garmin | Python 3 · pip |
 | ✍️ Humanize | Python 3 · pip (commercial API only) |
 | 🎨 GPT Image 2 | Python 3 · pip · `imagemagick` (optional) |
-| 🔬 Deep Research | Python 3 · Node.js · Bright Data CLI (`npm install -g @brightdata/cli`) · Bright Data account |
+| 🔬 Deep Research | Python 3.9+ (stdlib only). Optional for fallback scraping: Node.js · Bright Data CLI (`npm install -g @brightdata/cli`) · Bright Data account |
 
 ## 📄 License
 
