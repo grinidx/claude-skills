@@ -71,9 +71,7 @@ def test_garmin_exposes_client_attribute():
 def test_garmin_has_no_garth_attribute():
     """Guard against reintroducing the 0.2.x .garth call sites."""
     g = Garmin()
-    assert not hasattr(g, "garth"), (
-        "garminconnect exposes .garth again -- reconcile with garmin_client.py"
-    )
+    assert not hasattr(g, "garth"), "garminconnect exposes .garth again -- reconcile with garmin_client.py"
 
 
 def test_garth_client_can_dump_and_load_tokens():
@@ -165,9 +163,7 @@ RELOGIN_HINT = "garmin_login.py"
 
 def _write_oauth2(token_dir, expires_at):
     token_dir.mkdir(parents=True, exist_ok=True)
-    (token_dir / "oauth2_token.json").write_text(
-        json.dumps({"refresh_token_expires_at": expires_at})
-    )
+    (token_dir / "oauth2_token.json").write_text(json.dumps({"refresh_token_expires_at": expires_at}))
 
 
 class TestReadRefreshExpiry:
@@ -246,6 +242,7 @@ class GarminAuthError(GarminConfigError):
     Subclasses GarminConfigError so existing `except GarminConfigError`
     handlers in the CLI scripts catch it unchanged.
     """
+
     pass
 
 
@@ -255,13 +252,11 @@ class GarminFetchError(Exception):
     Distinct from "Garmin has no data for this day", which is a None return.
     Callers that write files must abort on this rather than archive an empty day.
     """
+
     pass
 
 
-RELOGIN_COMMAND = (
-    "  ~/.claude/skills/garmin/.venv/bin/python "
-    "~/.claude/skills/garmin/scripts/garmin_login.py"
-)
+RELOGIN_COMMAND = "  ~/.claude/skills/garmin/.venv/bin/python ~/.claude/skills/garmin/scripts/garmin_login.py"
 
 
 def read_refresh_expiry(token_dir: str = DEFAULT_TOKEN_DIR) -> datetime | None:
@@ -301,24 +296,14 @@ def describe_auth_failure(token_dir: str, exc: Exception) -> str:
     expiry = read_refresh_expiry(token_dir)
 
     if expiry is None:
-        return (
-            "Not authenticated: no usable Garmin tokens found.\n"
-            "Log in to authenticate:\n"
-            f"{RELOGIN_COMMAND}"
-        )
+        return f"Not authenticated: no usable Garmin tokens found.\nLog in to authenticate:\n{RELOGIN_COMMAND}"
 
     if expiry < datetime.now():
         return (
-            f"Garmin tokens expired on {expiry.date().isoformat()}.\n"
-            "Log in again to refresh them:\n"
-            f"{RELOGIN_COMMAND}"
+            f"Garmin tokens expired on {expiry.date().isoformat()}.\nLog in again to refresh them:\n{RELOGIN_COMMAND}"
         )
 
-    return (
-        f"Could not resume Garmin session: {exc}\n"
-        "Log in again to refresh your tokens:\n"
-        f"{RELOGIN_COMMAND}"
-    )
+    return f"Could not resume Garmin session: {exc}\nLog in again to refresh your tokens:\n{RELOGIN_COMMAND}"
 ```
 
 - [ ] **Step 4: Run the tests to verify they pass**
@@ -503,11 +488,12 @@ if __name__ == "__main__":
 `garmin/scripts/garmin_login.py:118` is the last `.garth` reference. Replace:
 
 ```python
-    # Verify
-    from garminconnect import Garmin
-    garmin = Garmin()
-    garmin.client.load(str(token_path))
-    name = garmin.get_full_name()
+# Verify
+from garminconnect import Garmin
+
+garmin = Garmin()
+garmin.client.load(str(token_path))
+name = garmin.get_full_name()
 ```
 
 - [ ] **Step 6: Verify no .garth references remain**
@@ -600,6 +586,7 @@ class TestSafeCall:
 
     def test_returns_none_when_garmin_has_no_data(self, fake_http_error):
         """404 means 'nothing recorded that day' -- absence, not failure."""
+
         def not_found():
             raise fake_http_error(404)
 
@@ -771,6 +758,7 @@ def fetch_training(client, cdate: str) -> tuple[dict | None, dict | None]:
 
     None for either value means Garmin has no such data; failures raise.
     """
+
     def _call(fn):
         try:
             return fn(cdate)
@@ -826,9 +814,7 @@ class TestSnapshotAbortsOnFetchError:
     @patch("garmin_snapshot.fetch_day_data")
     @patch("garmin_snapshot.get_client")
     @patch("garmin_snapshot.load_config")
-    def test_writes_no_file_when_fetch_fails(
-        self, mock_config, mock_client, mock_fetch, tmp_path, monkeypatch, capsys
-    ):
+    def test_writes_no_file_when_fetch_fails(self, mock_config, mock_client, mock_fetch, tmp_path, monkeypatch, capsys):
         """The core guard: a failed fetch must never archive a hollow day."""
         mock_config.return_value = {"email": "a@b.c", "password": "x"}
         mock_client.return_value = MagicMock()
@@ -862,9 +848,7 @@ class TestRollupAbortsOnFetchError:
     @patch("garmin_rollup.fetch_day_data")
     @patch("garmin_rollup.get_client")
     @patch("garmin_rollup.load_config")
-    def test_writes_no_file_when_a_day_fails(
-        self, mock_config, mock_client, mock_fetch, tmp_path, monkeypatch, capsys
-    ):
+    def test_writes_no_file_when_a_day_fails(self, mock_config, mock_client, mock_fetch, tmp_path, monkeypatch, capsys):
         mock_config.return_value = {"email": "a@b.c", "password": "x"}
         mock_client.return_value = MagicMock()
         mock_fetch.side_effect = GarminFetchError("Garmin API call failed: 429")
@@ -892,24 +876,21 @@ Expected: FAIL — `GarminFetchError` escapes `main()` uncaught, so pytest sees 
 In `garmin/scripts/garmin_snapshot.py`, extend the import on line 19 to include `GarminFetchError`, then wrap the fetch block (currently lines 139-148):
 
 ```python
-    # Fetch all data. Any hard failure aborts before we write anything: a
-    # missing file is trivially fixed by re-running, but a file full of
-    # "No data" is indistinguishable from a genuine rest day forever after.
-    try:
-        health_data = fetch_day_data(client, cdate)
-        sleep_data = fetch_sleep(client, cdate)
-        activities_data = fetch_activities(client, days=1)
-        training_status, training_readiness = fetch_training(client, cdate)
-    except GarminFetchError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        print(f"No snapshot written for {cdate}.", file=sys.stderr)
-        sys.exit(1)
+# Fetch all data. Any hard failure aborts before we write anything: a
+# missing file is trivially fixed by re-running, but a file full of
+# "No data" is indistinguishable from a genuine rest day forever after.
+try:
+    health_data = fetch_day_data(client, cdate)
+    sleep_data = fetch_sleep(client, cdate)
+    activities_data = fetch_activities(client, days=1)
+    training_status, training_readiness = fetch_training(client, cdate)
+except GarminFetchError as e:
+    print(f"Error: {e}", file=sys.stderr)
+    print(f"No snapshot written for {cdate}.", file=sys.stderr)
+    sys.exit(1)
 
-    # Filter activities to just this date
-    activities = [
-        a for a in activities_data
-        if a.get("startTimeLocal", "").startswith(cdate)
-    ]
+# Filter activities to just this date
+activities = [a for a in activities_data if a.get("startTimeLocal", "").startswith(cdate)]
 ```
 
 - [ ] **Step 4: Guard rollup's main()**
@@ -946,9 +927,7 @@ def fetch_activities_for_range(client, start: str, end: str) -> list[dict]:
     except Exception as exc:
         if _is_not_found(exc):
             return []
-        raise GarminFetchError(
-            f"Could not fetch activities for {start}..{end}: {exc}"
-        ) from exc
+        raise GarminFetchError(f"Could not fetch activities for {start}..{end}: {exc}") from exc
 ```
 
 - [ ] **Step 5: Run the tests to verify they pass**
@@ -988,18 +967,19 @@ The `units` setting only ever controlled activity distance, so name it for what 
 Fix the stale assertion at `garmin/tests/test_garmin_activities.py:60`. It has asserted `"5.2 km"` since commit `f879fda` made imperial the default; the formatter emits `3.2 miles`. Replace the body of `test_formats_multiple_activities`:
 
 ```python
-    def test_formats_multiple_activities(self):
-        result = format_activities(MOCK_ACTIVITIES)
-        assert "HYROX Training" in result
-        assert "Morning Run" in result
-        assert "58 min" in result
-        assert "152 bpm" in result
-        assert "3.2 miles" in result  # 5200 m, default distance_units=miles
+def test_formats_multiple_activities(self):
+    result = format_activities(MOCK_ACTIVITIES)
+    assert "HYROX Training" in result
+    assert "Morning Run" in result
+    assert "58 min" in result
+    assert "152 bpm" in result
+    assert "3.2 miles" in result  # 5200 m, default distance_units=miles
 
-    def test_formats_distance_in_km_when_requested(self):
-        result = format_activities(MOCK_ACTIVITIES, distance_units="km")
-        assert "5.2 km" in result
-        assert "miles" not in result
+
+def test_formats_distance_in_km_when_requested(self):
+    result = format_activities(MOCK_ACTIVITIES, distance_units="km")
+    assert "5.2 km" in result
+    assert "miles" not in result
 ```
 
 Append to `garmin/tests/test_garmin_client.py`:
@@ -1014,36 +994,34 @@ class TestDistanceUnits:
 
     def test_explicit_km_is_respected(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(
-            json.dumps({"email": "a@b.c", "password": "x", "distance_units": "km"})
-        )
+        config_file.write_text(json.dumps({"email": "a@b.c", "password": "x", "distance_units": "km"}))
         config = load_config(config_path=str(config_file))
         assert config["distance_units"] == "km"
 
     def test_legacy_imperial_maps_to_miles(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(
-            json.dumps({"email": "a@b.c", "password": "x", "units": "imperial"})
-        )
+        config_file.write_text(json.dumps({"email": "a@b.c", "password": "x", "units": "imperial"}))
         config = load_config(config_path=str(config_file))
         assert config["distance_units"] == "miles"
 
     def test_legacy_metric_maps_to_km(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(
-            json.dumps({"email": "a@b.c", "password": "x", "units": "metric"})
-        )
+        config_file.write_text(json.dumps({"email": "a@b.c", "password": "x", "units": "metric"}))
         config = load_config(config_path=str(config_file))
         assert config["distance_units"] == "km"
 
     def test_explicit_setting_beats_legacy_key(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps({
-            "email": "a@b.c",
-            "password": "x",
-            "units": "imperial",
-            "distance_units": "km",
-        }))
+        config_file.write_text(
+            json.dumps(
+                {
+                    "email": "a@b.c",
+                    "password": "x",
+                    "units": "imperial",
+                    "distance_units": "km",
+                }
+            )
+        )
         config = load_config(config_path=str(config_file))
         assert config["distance_units"] == "km"
 ```

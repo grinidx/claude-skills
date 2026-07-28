@@ -43,7 +43,6 @@ def failing_response(exc: Exception) -> MagicMock:
 
 
 class TestLoadConfig(unittest.TestCase):
-
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self._saved = humanize_api.CONFIG_FILE
@@ -69,10 +68,8 @@ class TestLoadConfig(unittest.TestCase):
 
 
 class TestSubmitText(unittest.TestCase):
-
     def test_posts_to_submit_with_key_and_content(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"id": "doc-123"})) as post:
+        with patch.object(humanize_api.requests, "post", return_value=response({"id": "doc-123"})) as post:
             doc_id = humanize_api.submit_text("my-key", "some text")
 
         self.assertEqual(doc_id, "doc-123")
@@ -83,55 +80,57 @@ class TestSubmitText(unittest.TestCase):
 
     def test_sends_a_timeout(self):
         # A request without a timeout can hang the skill indefinitely.
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"id": "doc-123"})) as post:
+        with patch.object(humanize_api.requests, "post", return_value=response({"id": "doc-123"})) as post:
             humanize_api.submit_text("my-key", "text")
         self.assertIn("timeout", post.call_args.kwargs)
 
     def test_response_without_id_exits_one(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"error": "bad request"})):
+        with patch.object(humanize_api.requests, "post", return_value=response({"error": "bad request"})):
             with self.assertRaises(SystemExit) as ctx:
                 humanize_api.submit_text("my-key", "text")
         self.assertEqual(ctx.exception.code, 1)
 
     def test_empty_id_is_treated_as_missing(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"id": ""})):
+        with patch.object(humanize_api.requests, "post", return_value=response({"id": ""})):
             with self.assertRaises(SystemExit):
                 humanize_api.submit_text("my-key", "text")
 
     def test_http_error_propagates(self):
         error = RuntimeError("401 Unauthorized")
-        with patch.object(humanize_api.requests, "post",
-                          return_value=failing_response(error)):
+        with patch.object(humanize_api.requests, "post", return_value=failing_response(error)):
             with self.assertRaises(RuntimeError):
                 humanize_api.submit_text("bad-key", "text")
 
 
 class TestPollResult(unittest.TestCase):
-
     def test_returns_output_when_done(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"status": "done", "output": "humanised"})), \
-             patch.object(humanize_api.time, "sleep") as sleep:
+        with (
+            patch.object(
+                humanize_api.requests, "post", return_value=response({"status": "done", "output": "humanised"})
+            ),
+            patch.object(humanize_api.time, "sleep") as sleep,
+        ):
             self.assertEqual(humanize_api.poll_result("k", "doc-1"), "humanised")
         sleep.assert_not_called()
 
     def test_polls_until_done(self):
         pending = response({"status": "pending"})
         done = response({"status": "done", "output": "final"})
-        with patch.object(humanize_api.requests, "post",
-                          side_effect=[pending, pending, done]) as post, \
-             patch.object(humanize_api.time, "sleep") as sleep:
+        with (
+            patch.object(humanize_api.requests, "post", side_effect=[pending, pending, done]) as post,
+            patch.object(humanize_api.time, "sleep") as sleep,
+        ):
             self.assertEqual(humanize_api.poll_result("k", "doc-1"), "final")
         self.assertEqual(post.call_count, 3)
         self.assertEqual(sleep.call_count, 2)
 
     def test_posts_the_document_id(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"status": "done", "output": "x"})) as post, \
-             patch.object(humanize_api.time, "sleep"):
+        with (
+            patch.object(
+                humanize_api.requests, "post", return_value=response({"status": "done", "output": "x"})
+            ) as post,
+            patch.object(humanize_api.time, "sleep"),
+        ):
             humanize_api.poll_result("my-key", "doc-77")
         args, kwargs = post.call_args
         self.assertEqual(args[0], f"{humanize_api.API_BASE}/document")
@@ -139,23 +138,26 @@ class TestPollResult(unittest.TestCase):
         self.assertEqual(kwargs["headers"]["apikey"], "my-key")
 
     def test_done_without_output_returns_empty_string(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"status": "done"})), \
-             patch.object(humanize_api.time, "sleep"):
+        with (
+            patch.object(humanize_api.requests, "post", return_value=response({"status": "done"})),
+            patch.object(humanize_api.time, "sleep"),
+        ):
             self.assertEqual(humanize_api.poll_result("k", "doc-1"), "")
 
     def test_error_status_exits_one(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"status": "error", "message": "nope"})), \
-             patch.object(humanize_api.time, "sleep"):
+        with (
+            patch.object(humanize_api.requests, "post", return_value=response({"status": "error", "message": "nope"})),
+            patch.object(humanize_api.time, "sleep"),
+        ):
             with self.assertRaises(SystemExit) as ctx:
                 humanize_api.poll_result("k", "doc-1")
         self.assertEqual(ctx.exception.code, 1)
 
     def test_gives_up_after_max_polls(self):
-        with patch.object(humanize_api.requests, "post",
-                          return_value=response({"status": "pending"})) as post, \
-             patch.object(humanize_api.time, "sleep"):
+        with (
+            patch.object(humanize_api.requests, "post", return_value=response({"status": "pending"})) as post,
+            patch.object(humanize_api.time, "sleep"),
+        ):
             with self.assertRaises(SystemExit) as ctx:
                 humanize_api.poll_result("k", "doc-1")
         self.assertEqual(ctx.exception.code, 1)
@@ -164,14 +166,15 @@ class TestPollResult(unittest.TestCase):
     def test_sleeps_the_configured_interval(self):
         pending = response({"status": "pending"})
         done = response({"status": "done", "output": "x"})
-        with patch.object(humanize_api.requests, "post", side_effect=[pending, done]), \
-             patch.object(humanize_api.time, "sleep") as sleep:
+        with (
+            patch.object(humanize_api.requests, "post", side_effect=[pending, done]),
+            patch.object(humanize_api.time, "sleep") as sleep,
+        ):
             humanize_api.poll_result("k", "doc-1")
         sleep.assert_called_once_with(humanize_api.POLL_INTERVAL)
 
 
 class TestMain(unittest.TestCase):
-
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
@@ -218,8 +221,7 @@ class TestMain(unittest.TestCase):
         source = self.root / "input.txt"
         source.write_text("text from a file")
 
-        with patch.object(humanize_api.requests, "post") as post, \
-             patch.object(humanize_api.time, "sleep"):
+        with patch.object(humanize_api.requests, "post") as post, patch.object(humanize_api.time, "sleep"):
             post.side_effect = [
                 response({"id": "doc-9"}),
                 response({"status": "done", "output": "humanised"}),

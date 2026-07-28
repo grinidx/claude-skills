@@ -81,7 +81,7 @@ def section_body(text: str, heading: str) -> str:
         title = re.sub(r"[^\w\s-]", "", match.group(2)).strip().casefold()
         if title == target:
             end = headings[i + 1].start() if i + 1 < len(headings) else len(text)
-            return text[match.end():end]
+            return text[match.end() : end]
     return ""
 
 
@@ -97,7 +97,6 @@ def mentions(section: str, skill: str) -> bool:
 
 
 class TestSkillDiscovery(unittest.TestCase):
-
     def test_repo_has_skills(self):
         # Guards the rest of this file: every other assertion loops over this
         # list, so an empty list would make the whole suite vacuously green.
@@ -113,7 +112,6 @@ class TestSkillDiscovery(unittest.TestCase):
 
 
 class TestFrontmatter(unittest.TestCase):
-
     def test_frontmatter_block_is_present_and_parses(self):
         for path in skill_dirs():
             with self.subTest(skill=path.name):
@@ -139,7 +137,8 @@ class TestFrontmatter(unittest.TestCase):
             with self.subTest(skill=path.name):
                 fields = parse_frontmatter(path / "SKILL.md")
                 self.assertEqual(
-                    fields.get("name"), path.name,
+                    fields.get("name"),
+                    path.name,
                     f"{path.name}/SKILL.md declares name '{fields.get('name')}'",
                 )
 
@@ -150,7 +149,8 @@ class TestFrontmatter(unittest.TestCase):
             with self.subTest(skill=path.name):
                 description = parse_frontmatter(path / "SKILL.md")["description"]
                 self.assertGreaterEqual(
-                    len(description), 40,
+                    len(description),
+                    40,
                     f"{path.name}: description is too short to route on",
                 )
 
@@ -212,7 +212,6 @@ class TestReadmeTables(unittest.TestCase):
 
 
 class TestClaudeMdTables(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.claude_md = CLAUDE_MD.read_text(encoding="utf-8")
@@ -222,7 +221,8 @@ class TestClaudeMdTables(unittest.TestCase):
         for name in skill_names():
             with self.subTest(skill=name):
                 self.assertIn(
-                    f"{name}/", section,
+                    f"{name}/",
+                    section,
                     f"CLAUDE.md structure tree omits {name}",
                 )
 
