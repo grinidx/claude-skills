@@ -57,10 +57,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.10 is the floor here, not 3.9: unlike deep-research, these scripts use
-        # PEP 604 (`float | None`) in annotations that are evaluated at runtime,
-        # without `from __future__ import annotations` to defer them.
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        # 3.12 is the floor here, not deep-research's 3.9, and the binding
+        # constraint is the dependency rather than our own code: garminconnect
+        # 0.3.3+ declares Requires-Python >=3.12, so pip cannot even resolve the
+        # pin below that. (The scripts' PEP 604 annotations would independently
+        # require 3.10, but that limit is never the one you hit first.)
+        python-version: ['3.12', '3.13']
 
     steps:
       - uses: actions/checkout@v4
