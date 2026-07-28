@@ -30,21 +30,6 @@ updates:
           - "*"
 
   - package-ecosystem: pip
-    directory: /deep-research
-    schedule:
-      interval: weekly
-      day: monday
-    labels:
-      - dependencies
-      - python
-    commit-message:
-      prefix: "deps(deep-research)"
-    groups:
-      deep-research:
-        patterns:
-          - "*"
-
-  - package-ecosystem: pip
     directory: /garmin
     schedule:
       interval: weekly
@@ -88,23 +73,3 @@ updates:
       humanize:
         patterns:
           - "*"
-
-  - package-ecosystem: pip
-    directory: /pst-to-markdown
-    schedule:
-      interval: weekly
-      day: monday
-    labels:
-      - dependencies
-      - python
-    commit-message:
-      prefix: "deps(pst-to-markdown)"
-    groups:
-      pst-to-markdown:
-        patterns:
-          - "*"
-    ignore:
-      # libratom pins numpy==1.23.5 transitively, and that pin is what caps the
-      # skill at Python 3.11. A numpy bump proposed independently of libratom
-      # would conflict with libratom's own pin and could not be merged.
-      - dependency-name: numpy

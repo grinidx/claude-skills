@@ -71,13 +71,14 @@ while read -r skill; do
 done <<<"$codex_skills"
 
 echo "install-codex.sh: installs a skill with Codex-local paths"
-# deep-research is the cheap end-to-end case: its requirements.txt is empty by
-# design (stdlib only), so post_install costs a venv and nothing else.
-if ! HOME="$TMP_HOME" "$REPO_DIR/install-codex.sh" deep-research >/dev/null; then
-    fail "installer exited non-zero for deep-research"
+# gpt-image-2 is the cheap end-to-end case: a single small pure-Python
+# dependency (PyYAML), so post_install costs a venv and one wheel. It replaced
+# deep-research here when that skill moved to github.com/dbhq-uk/legwork.
+if ! HOME="$TMP_HOME" "$REPO_DIR/install-codex.sh" gpt-image-2 >/dev/null; then
+    fail "installer exited non-zero for gpt-image-2"
 fi
 
-target="$TMP_HOME/.codex/skills/deep-research"
+target="$TMP_HOME/.codex/skills/gpt-image-2"
 [ -d "$target" ]           || fail "expected $target to exist"
 [ -L "$target/scripts" ]   || fail "expected $target/scripts to be a symlink into the repo"
 [ -f "$target/SKILL.md" ]  || fail "expected a generated SKILL.md"
@@ -93,7 +94,7 @@ if grep -q "~/.claude/skills/" "$target/SKILL.md"; then
     fail "generated SKILL.md still contains Claude-specific paths"
 fi
 # shellcheck disable=SC2088
-grep -q "~/.codex/skills/deep-research" "$target/SKILL.md" \
+grep -q "~/.codex/skills/gpt-image-2" "$target/SKILL.md" \
     || fail "generated SKILL.md has no rewritten Codex path"
 
 echo "install-codex.sh: rejects an unknown skill"

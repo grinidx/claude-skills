@@ -18,13 +18,18 @@
 
 | Skill | Description |
 |-------|-------------|
-| 📨 **[PST to Markdown](./pst-to-markdown/)** | Extract Outlook PST archives into organised markdown with YAML frontmatter & integrity verification |
 | ⌚ **[Garmin](./garmin/)** | Garmin Connect health & fitness data — Body Battery, HRV, sleep, activities, VO2 max, training load/readiness, daily snapshots & weekly rollups |
 | ✍️ **[Humanize](./humanize/)** | Rewrite AI-generated text to sound natural in British English — 29+ AI tells across 5 categories with before/after examples, tone presets (neutral/casual/professional/academic), self-audit dual prompt, optional Undetectable AI API |
 | 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
-| 🔬 **[Deep Research](./deep-research/)** | Multi-source web research with citation tracking and evidence persistence. Built-in WebSearch first (free); Bright Data CLI as a paid fallback for blocked pages, Reddit, and geo SERP. Brief-by-default deliverables, quick/standard/deep/ultradeep modes, mode-scaled cost, user-tunable credibility re-ranking |
 
-> **Moved:** the **Outlook** and **Trello** skills now live in their own repositories under [github.com/dbhq-uk](https://github.com/dbhq-uk) - install them via the DBHQ marketplace (`/plugin marketplace add dbhq-uk/marketplace`) or from [dbhq-uk/outlook](https://github.com/dbhq-uk/outlook) and [dbhq-uk/trello](https://github.com/dbhq-uk/trello).
+> **Moved to their own repositories** under [github.com/dbhq-uk](https://github.com/dbhq-uk), and installable via the DBHQ marketplace (`/plugin marketplace add dbhq-uk/marketplace`):
+>
+> | Skill | Now lives at | Install |
+> |---|---|---|
+> | Outlook | [dbhq-uk/outlook-graph-skill](https://github.com/dbhq-uk/outlook-graph-skill) | `/plugin install outlook-graph@dbhq` |
+> | PST to Markdown | [dbhq-uk/outlook-graph-skill](https://github.com/dbhq-uk/outlook-graph-skill) (same pack) | `/plugin install outlook-graph@dbhq` |
+> | Trello | [dbhq-uk/trello-skill](https://github.com/dbhq-uk/trello-skill) | `/plugin install trello@dbhq` |
+> | Deep Research | [dbhq-uk/legwork-skill](https://github.com/dbhq-uk/legwork-skill) (renamed **Legwork**) | `/plugin install legwork@dbhq` |
 
 ## 🚀 Installation
 
@@ -71,26 +76,18 @@ No secrets are stored in this repo. Each skill externalises credentials:
 
 | Skill | Credential Location | Setup |
 |-------|---------------------|-------|
-| 📨 PST to Markdown | None (local only) | `pst-to-markdown/setup.sh` |
 | ⌚ Garmin | `~/.garmin/` | `garmin/scripts/setup.sh` |
 | ✍️ Humanize | `~/.humanize/` (optional) | `humanize/scripts/setup.sh` |
 | 🎨 GPT Image 2 | `$OPENAI_API_KEY` env var | `gpt-image-2/setup.sh` |
-| 🔬 Deep Research | None required. Optional: Bright Data CLI (`brightdata login`) for the fallback provider | `deep-research/setup.sh` |
 
 ## ⚙️ Requirements
 
 | Skill | Dependencies |
 |-------|-------------|
-| 📨 PST to Markdown | Python 3.9–**3.11** · pip · `readpst` (optional fallback). The ceiling is `libratom`, which pins `numpy==1.23.5` — no wheel above cp311 |
 | ⌚ Garmin | Python 3.12+ · pip (required by `garminconnect` 0.3.x) |
 | ✍️ Humanize | Python 3.9+ · pip (commercial API only) |
 | 🎨 GPT Image 2 | Python 3.9+ · pip · `imagemagick` (optional) |
-| 🔬 Deep Research | Python 3.9+ (stdlib only). Optional for fallback scraping: Node.js · Bright Data CLI (`npm install -g @brightdata/cli`) · Bright Data account |
 
-> **Note on PST to Markdown:** the Python ceiling is a real constraint, not caution.
-> `pip install -r pst-to-markdown/requirements.txt` fails on 3.12+ because
-> `libratom` pins an old numpy that cannot build there. CI asserts the 3.11
-> ceiling so it stays a documented fact rather than a surprise during setup.
 
 ## 🧪 Development
 
