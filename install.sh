@@ -52,6 +52,13 @@ check_deps_garmin() {
         err "Missing dependency for garmin: python3"
         return 1
     fi
+    # post_install provisions the venv directly rather than via the skill's
+    # setup.sh, so the 3.12 floor that garminconnect 0.3.x requires has to be
+    # enforced here too — otherwise the only symptom is a pip resolver dump.
+    if ! python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)"; then
+        err "garmin needs Python 3.12+ (garminconnect 0.3.x), found $(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+        return 1
+    fi
     return 0
 }
 

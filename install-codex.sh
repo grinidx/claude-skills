@@ -16,7 +16,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.codex/skills"
 
 # Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
-AVAILABLE_SKILLS=(pst-to-markdown garmin humanize)
+AVAILABLE_SKILLS=(pst-to-markdown garmin humanize gpt-image-2 deep-research)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -48,6 +48,13 @@ check_deps_garmin() {
         err "Missing dependency for garmin: python3"
         return 1
     fi
+    # post_install provisions the venv directly rather than via the skill's
+    # setup.sh, so the 3.12 floor that garminconnect 0.3.x requires has to be
+    # enforced here too — otherwise the only symptom is a pip resolver dump.
+    if ! python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)"; then
+        err "garmin needs Python 3.12+ (garminconnect 0.3.x), found $(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+        return 1
+    fi
     return 0
 }
 
@@ -59,12 +66,38 @@ check_deps_humanize() {
     return 0
 }
 
+check_deps_gpt_image_2() {
+    if ! command -v python3 &>/dev/null; then
+        err "Missing dependency for gpt-image-2: python3"
+        return 1
+    fi
+    if ! command -v magick &>/dev/null; then
+        warn "ImageMagick not found (optional — needed for resizing and contact sheets)"
+        echo "    macOS: brew install imagemagick"
+        echo "    Linux: sudo apt install imagemagick"
+    fi
+    return 0
+}
+
+check_deps_deep_research() {
+    if ! command -v python3 &>/dev/null; then
+        err "Missing dependency for deep-research: python3"
+        return 1
+    fi
+    if ! command -v brightdata &>/dev/null && ! command -v bdata &>/dev/null; then
+        warn "Bright Data CLI not found — install with: npm install -g @brightdata/cli"
+    fi
+    return 0
+}
+
 check_deps() {
     local skill="$1"
     case "$skill" in
         pst-to-markdown) check_deps_pst_to_markdown ;;
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
+        gpt-image-2)    check_deps_gpt_image_2 ;;
+        deep-research)  check_deps_deep_research ;;
         *)              return 0 ;;
     esac
 }
@@ -200,6 +233,48 @@ post_install() {
                 ok "Humanize API config found"
             else
                 info "No commercial API configured (optional) -- run: ~/.codex/skills/humanize/scripts/setup.sh"
+            fi
+            ;;
+
+        gpt-image-2)
+            chmod +x "$REPO_DIR/gpt-image-2/setup.sh" 2>/dev/null || true
+            chmod +x "$REPO_DIR/gpt-image-2/scripts/gpt_image_2.py" 2>/dev/null || true
+
+            if [ ! -d "$REPO_DIR/gpt-image-2/.venv" ]; then
+                info "Setting up Python virtual environment..."
+                python3 -m venv "$REPO_DIR/gpt-image-2/.venv"
+                "$REPO_DIR/gpt-image-2/.venv/bin/pip" install --upgrade pip -q
+                "$REPO_DIR/gpt-image-2/.venv/bin/pip" install -r "$REPO_DIR/gpt-image-2/requirements.txt" -q
+            else
+                ok "Python venv already exists"
+                "$REPO_DIR/gpt-image-2/.venv/bin/pip" install -r "$REPO_DIR/gpt-image-2/requirements.txt" -q 2>/dev/null || true
+            fi
+
+            if [ -n "${OPENAI_API_KEY:-}" ] || [ -n "${OPENROUTER_API_KEY:-}" ]; then
+                ok "API key found in environment"
+            else
+                warn "No OPENAI_API_KEY in environment — set it before generating images"
+                echo "    export OPENAI_API_KEY=sk-..."
+            fi
+            ;;
+
+        deep-research)
+            chmod +x "$REPO_DIR/deep-research/setup.sh" 2>/dev/null || true
+            chmod +x "$REPO_DIR/deep-research/scripts/bd_search.py" 2>/dev/null || true
+
+            if [ ! -d "$REPO_DIR/deep-research/.venv" ]; then
+                info "Setting up Python virtual environment..."
+                "$REPO_DIR/deep-research/setup.sh"
+            else
+                ok "Python venv already exists"
+                "$REPO_DIR/deep-research/.venv/bin/pip" install -r "$REPO_DIR/deep-research/requirements.txt" -q 2>/dev/null || true
+            fi
+
+            if command -v brightdata &>/dev/null || command -v bdata &>/dev/null; then
+                ok "Bright Data CLI on PATH"
+            else
+                warn "Bright Data CLI missing — install with: npm install -g @brightdata/cli"
+                echo "    Then authenticate: brightdata login"
             fi
             ;;
     esac

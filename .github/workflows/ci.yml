@@ -88,6 +88,26 @@ jobs:
         # login assertion fails on the missing tokenstore before any request.
         run: python -m pytest tests/ -v -p no:cacheprovider
 
+  installers:
+    name: installers (parity + codex install)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # 3.12 so the garmin dependency floor is satisfied if this suite ever
+          # grows a garmin install case.
+          python-version: '3.12'
+
+      - name: install-codex.sh tests
+        # This suite was red for months without anyone noticing: nothing ran it,
+        # and it still installed `trello`, a skill extracted to its own repo in
+        # Jul 2026. Wiring it into CI is what stops the installers drifting apart
+        # again -- which is how gpt-image-2 and deep-research ended up
+        # uninstallable for Codex.
+        run: bash tests/test_install_codex.sh
+
   smoke:
     name: end-to-end smoke (no network)
     runs-on: ubuntu-latest
