@@ -13,11 +13,9 @@ body:
     attributes:
       label: Which skill?
       options:
-        - deep-research
         - garmin
         - gpt-image-2
         - humanize
-        - pst-to-markdown
         - installers (install.sh / install-codex.sh)
         - something else
     validations:
@@ -65,7 +63,7 @@ body:
     id: python
     attributes:
       label: Python version
-      description: "`python3 --version`. Floors differ per skill — pst-to-markdown caps at 3.11, garmin needs 3.12+."
+      description: "`python3 --version`. Floors differ per skill - garmin needs 3.12+, the others run on 3.9+."
       placeholder: "3.12.3"
 
   - type: input

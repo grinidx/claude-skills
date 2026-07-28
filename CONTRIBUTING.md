@@ -80,10 +80,8 @@ code. The CI matrix encodes the real floor for each:
 
 | Skill | Floor | Why |
 |-------|-------|-----|
-| deep-research | 3.9 | stdlib-only; `from __future__ import annotations` throughout |
 | gpt-image-2 | 3.9 | PyYAML only |
 | humanize | 3.9 | no annotations; `requests` resolves an older release on 3.9 |
-| pst-to-markdown | 3.9–**3.11** | `libratom` pins `numpy==1.23.5`, whose newest wheel is cp311 |
 | garmin | 3.12 | `garminconnect` 0.3.x declares `Requires-Python >=3.12` |
 
 ## Credentials

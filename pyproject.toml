@@ -3,7 +3,7 @@
 # is ever built or published.
 
 [tool.ruff]
-# 3.9 is the repo-wide floor -- deep-research and pst-to-markdown both run there.
+# 3.9 is the repo-wide floor -- gpt-image-2 and humanize both run there.
 # (garmin needs 3.12+, but linting it against the lower floor costs nothing and
 # keeps one setting instead of per-directory overrides.)
 target-version = "py39"

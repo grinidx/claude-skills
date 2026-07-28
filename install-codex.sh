@@ -16,7 +16,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$HOME/.codex/skills"
 
 # Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
-AVAILABLE_SKILLS=(pst-to-markdown garmin humanize gpt-image-2 deep-research)
+AVAILABLE_SKILLS=(garmin humanize gpt-image-2)
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -29,19 +29,6 @@ info()  { echo -e "${BLUE}==>${NC} $*"; }
 ok()    { echo -e "${GREEN}✓${NC} $*"; }
 warn()  { echo -e "${YELLOW}!${NC} $*"; }
 err()   { echo -e "${RED}✗${NC} $*"; }
-
-check_deps_pst_to_markdown() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for pst-to-markdown: python3"
-        return 1
-    fi
-    if ! command -v readpst &>/dev/null; then
-        warn "readpst not found (optional — needed if libratom fails)"
-        echo "    Ubuntu/Debian: sudo apt install pst-utils"
-        echo "    macOS: brew install libpst"
-    fi
-    return 0
-}
 
 check_deps_garmin() {
     if ! command -v python3 &>/dev/null; then
@@ -79,25 +66,12 @@ check_deps_gpt_image_2() {
     return 0
 }
 
-check_deps_deep_research() {
-    if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for deep-research: python3"
-        return 1
-    fi
-    if ! command -v brightdata &>/dev/null && ! command -v bdata &>/dev/null; then
-        warn "Bright Data CLI not found — install with: npm install -g @brightdata/cli"
-    fi
-    return 0
-}
-
 check_deps() {
     local skill="$1"
     case "$skill" in
-        pst-to-markdown) check_deps_pst_to_markdown ;;
         garmin)         check_deps_garmin ;;
         humanize)       check_deps_humanize ;;
         gpt-image-2)    check_deps_gpt_image_2 ;;
-        deep-research)  check_deps_deep_research ;;
         *)              return 0 ;;
     esac
 }
@@ -181,18 +155,6 @@ post_install() {
     local skill="$1"
 
     case "$skill" in
-        pst-to-markdown)
-            chmod +x "$REPO_DIR/pst-to-markdown/setup.sh" 2>/dev/null || true
-            chmod +x "$REPO_DIR/pst-to-markdown/scripts/extract_pst.py" 2>/dev/null || true
-
-            if [ ! -d "$REPO_DIR/pst-to-markdown/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/pst-to-markdown/setup.sh"
-            else
-                ok "Python venv already exists"
-                "$REPO_DIR/pst-to-markdown/.venv/bin/pip" install -r "$REPO_DIR/pst-to-markdown/requirements.txt" -q 2>/dev/null || true
-            fi
-            ;;
 
 
         garmin)
@@ -258,25 +220,6 @@ post_install() {
             fi
             ;;
 
-        deep-research)
-            chmod +x "$REPO_DIR/deep-research/setup.sh" 2>/dev/null || true
-            chmod +x "$REPO_DIR/deep-research/scripts/bd_search.py" 2>/dev/null || true
-
-            if [ ! -d "$REPO_DIR/deep-research/.venv" ]; then
-                info "Setting up Python virtual environment..."
-                "$REPO_DIR/deep-research/setup.sh"
-            else
-                ok "Python venv already exists"
-                "$REPO_DIR/deep-research/.venv/bin/pip" install -r "$REPO_DIR/deep-research/requirements.txt" -q 2>/dev/null || true
-            fi
-
-            if command -v brightdata &>/dev/null || command -v bdata &>/dev/null; then
-                ok "Bright Data CLI on PATH"
-            else
-                warn "Bright Data CLI missing — install with: npm install -g @brightdata/cli"
-                echo "    Then authenticate: brightdata login"
-            fi
-            ;;
     esac
 }
 

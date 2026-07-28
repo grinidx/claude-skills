@@ -6,11 +6,9 @@ A collection of skills that extend Claude and Codex with external service integr
 
 ```
 claude-skills/
-├── pst-to-markdown/  # PST to markdown extraction (Python)
 ├── garmin/           # Garmin Connect health & fitness data (Python/garminconnect)
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
-├── deep-research/    # Multi-source web research (built-in WebSearch first, Bright Data fallback)
 ├── docs/plans/       # Per-skill design & implementation docs (<date>-<skill>-{design,plan}.md)
 ├── tests/            # Repo-level tests (installer behaviour, repo hygiene)
 ├── install.sh        # Claude installer (symlinks into ~/.claude/skills)
@@ -67,18 +65,15 @@ No secrets in the repo. Each skill externalises credentials:
 
 | Skill | Location |
 |-------|----------|
-| PST to Markdown | None (local) |
 | Garmin | `~/.garmin/` |
 | Humanize | `~/.humanize/` (optional, for commercial API) |
 | GPT Image 2 | `$OPENAI_API_KEY` env var |
-| Deep Research | None required (built-in WebSearch is primary). Optional fallback: Bright Data CLI (`brightdata login`, or `BRIGHTDATA_API_KEY`) |
 
 ### Dependencies
 
 - **Python skills:** Each has its own `requirements.txt` and `.venv/`
 - Both installers handle venv creation and dependency installation automatically
 - **Garmin needs Python 3.12+** — `garminconnect` 0.3.x declares `Requires-Python >=3.12`. Both installers and `garmin/scripts/setup.sh` check this up front, so the failure is a clear message rather than a pip resolver dump
-- **PST to Markdown caps at Python 3.11** — `libratom` pins `numpy==1.23.5`, whose newest wheel is cp311, so `pip install -r requirements.txt` fails outright on 3.12+. The two floors point in opposite directions: there is no single Python that runs both garmin and pst-to-markdown
 
 ## CI
 
@@ -91,8 +86,6 @@ job is hermetic — no network, no credentials, no real sleeps.
 | `repo-hygiene` | SKILL.md frontmatter, README/CLAUDE.md table sync, shellcheck |
 | `installers` | `install.sh` / `install-codex.sh` parity, real Codex install |
 | per-skill | each skill's `tests/`, on a floor + ceiling Python matrix |
-| `pst-to-markdown-install` | asserts the full `requirements.txt` installs on 3.11 |
-| `smoke` | deep-research end-to-end lifecycle against shipped fixtures |
 | `ci-ok` | aggregates the rest; this is the single required check for branch protection |
 
 Adding a job means adding it to `ci-ok`'s `needs:` list — the branch protection
@@ -106,7 +99,7 @@ before any skill's dependencies are installed.
 - Python scripts use the skill's `.venv/bin/python` (not system Python)
 - Source `SKILL.md` commands use Claude-style absolute paths (`~/.claude/skills/<skill>/...`); `install-codex.sh` rewrites them for Codex installs
 - Error messages go to stderr, structured output (JSON) to stdout
-- All skills work offline except Garmin, Humanize's commercial API engine, and Deep Research (which needs web access, though no API key of its own)
+- All skills work offline except Garmin and Humanize's commercial API engine
 
 ## Important Reminders
 
