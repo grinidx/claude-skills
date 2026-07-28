@@ -11,9 +11,11 @@ claude-skills/
 ├── humanize/         # Humanize AI-generated text (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
 ├── deep-research/    # Multi-source web research (built-in WebSearch first, Bright Data fallback)
+├── docs/plans/       # Per-skill design & implementation docs (<date>-<skill>-{design,plan}.md)
+├── tests/            # Repo-level tests (installer behaviour)
 ├── install.sh        # Claude installer (symlinks into ~/.claude/skills)
 ├── install-codex.sh  # Codex installer (installs into ~/.codex/skills)
-├── .github/workflows/ci.yml  # CI: deep-research tests (py3.9-3.13) + e2e smoke
+├── .github/workflows/ci.yml  # CI: deep-research (py3.9-3.13) + garmin (py3.12-3.13) + e2e smoke
 └── README.md         # User-facing documentation
 ```
 
@@ -58,9 +60,7 @@ No secrets in the repo. Each skill externalises credentials:
 
 | Skill | Location |
 |-------|----------|
-| Repo Search | None (local) |
 | PST to Markdown | None (local) |
-| Email Search | None (local) |
 | Garmin | `~/.garmin/` |
 | Humanize | `~/.humanize/` (optional, for commercial API) |
 | GPT Image 2 | `$OPENAI_API_KEY` env var |

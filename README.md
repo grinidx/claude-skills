@@ -80,10 +80,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 
 | Skill | Dependencies |
 |-------|-------------|
-| 🔍 Repo Search | Python 3 · pip |
 | 📨 PST to Markdown | Python 3 · pip · `readpst` (optional fallback) |
-| 📧 Email Search | Python 3 · pip |
-| 📎 Web Clipper | Python 3 · pip |
 | ⌚ Garmin | Python 3.12+ · pip (required by `garminconnect` 0.3.x) |
 | ✍️ Humanize | Python 3 · pip (commercial API only) |
 | 🎨 GPT Image 2 | Python 3 · pip · `imagemagick` (optional) |
