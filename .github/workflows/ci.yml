@@ -69,7 +69,18 @@ jobs:
       - name: shellcheck
         # ubuntu-latest ships shellcheck. Every finding was fixed when this step
         # was added, so any output here is new.
-        run: shellcheck install.sh install-codex.sh tests/*.sh */setup.sh */scripts/setup.sh
+        # ./ prefixes so a filename beginning with a dash could never be read as
+        # an option (SC2035).
+        run: shellcheck ./install.sh ./install-codex.sh ./tests/*.sh ./*/setup.sh ./*/scripts/setup.sh
+
+      - name: actionlint
+        # Added after this workflow's first run failed outright on a syntax error
+        # GitHub only reports once the file is pushed: expressions accept single
+        # quotes only, so join(needs.*.result, " ") is invalid. actionlint catches
+        # that locally, and it also shellchecks every `run:` block.
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
 
   installers:
     name: installers (parity + codex install)
@@ -397,7 +408,7 @@ jobs:
         # `needs.*.result` is 'success', 'failure', 'cancelled' or 'skipped'.
         # contains() over the whole set catches every non-success in one check.
         run: |
-          results='${{ join(needs.*.result, " ") }}'
+          results='${{ join(needs.*.result, ' ') }}'
           echo "job results: $results"
           for r in $results; do
             if [ "$r" != "success" ]; then
