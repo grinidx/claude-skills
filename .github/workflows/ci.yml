@@ -51,6 +51,43 @@ jobs:
           done
           echo "All scripts parse cleanly on Python ${{ matrix.python-version }}"
 
+  garmin:
+    name: garmin (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.12 is the floor here, not deep-research's 3.9, and the binding
+        # constraint is the dependency rather than our own code: garminconnect
+        # 0.3.3+ declares Requires-Python >=3.12, so pip cannot even resolve the
+        # pin below that. (The scripts' PEP 604 annotations would independently
+        # require 3.10, but that limit is never the one you hit first.)
+        python-version: ['3.12', '3.13']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        working-directory: garmin
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run test suite
+        working-directory: garmin
+        # test_garmin_api_contract.py imports the real garminconnect on purpose. It
+        # exists to catch an upstream auth-surface rename (.garth -> .client), which
+        # mocked tests cannot see because MagicMock invents whatever attribute it is
+        # asked for -- that is how the break went unnoticed for months. Still no
+        # network: it only constructs Garmin() and inspects attributes, and the
+        # login assertion fails on the missing tokenstore before any request.
+        run: python -m pytest tests/ -v -p no:cacheprovider
+
   smoke:
     name: end-to-end smoke (no network)
     runs-on: ubuntu-latest
