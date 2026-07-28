@@ -296,8 +296,10 @@ jobs:
 
       - name: Install the full documented requirements
         working-directory: pst-to-markdown
+        # setuptools and wheel go in first: libratom's transitive numpy==1.23.5
+        # is an sdist here and needs a build backend present to configure.
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip setuptools wheel pytest
           python -m pip install -r requirements.txt
 
       - name: libratom is importable, so the extraction path is real
