@@ -21,12 +21,11 @@ import os
 import re
 import sys
 from collections import Counter
-from datetime import datetime, timezone
-
 
 # ---------------------------------------------------------------------------
 # JSONL helpers
 # ---------------------------------------------------------------------------
+
 
 def read_jsonl(path: str) -> list[dict]:
     rows = []
@@ -60,10 +59,20 @@ YEAR_RE = re.compile(r'\b(19|20)\d{2}\b')
 ENTITY_RE = re.compile(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b')
 
 # Common stop entities to ignore
-STOP_ENTITIES = frozenset([
-    'The', 'This', 'That', 'These', 'However', 'Furthermore',
-    'Moreover', 'Additionally', 'Therefore', 'Nevertheless',
-])
+STOP_ENTITIES = frozenset(
+    [
+        'The',
+        'This',
+        'That',
+        'These',
+        'However',
+        'Furthermore',
+        'Moreover',
+        'Additionally',
+        'Therefore',
+        'Nevertheless',
+    ]
+)
 
 
 def extract_tokens(text: str) -> set[str]:
@@ -137,12 +146,7 @@ def compute_support_score(claim_text: str, evidence_quotes: list[str]) -> tuple[
             entity_match = 1.0
 
         # Weighted composite
-        score = (
-            0.4 * token_overlap +
-            0.25 * number_match +
-            0.15 * year_match +
-            0.2 * entity_match
-        )
+        score = 0.4 * token_overlap + 0.25 * number_match + 0.15 * year_match + 0.2 * entity_match
 
         if score > best_score:
             best_score = score
@@ -172,15 +176,14 @@ def compute_support_score(claim_text: str, evidence_quotes: list[str]) -> tuple[
 # Subcommands
 # ---------------------------------------------------------------------------
 
+
 def cmd_verify(args: argparse.Namespace) -> None:
     """Verify all claims against evidence, update claims.jsonl."""
     claims_path = os.path.join(args.dir, 'claims.jsonl')
     evidence_path = os.path.join(args.dir, 'evidence.jsonl')
-    sources_path = os.path.join(args.dir, 'sources.jsonl')
 
     claims = read_jsonl(claims_path)
     evidence = read_jsonl(evidence_path)
-    sources = read_jsonl(sources_path)
 
     # Build evidence index by source_id
     ev_by_source: dict[str, list[str]] = {}
@@ -245,8 +248,7 @@ def cmd_verify(args: argparse.Namespace) -> None:
     # Compute summary
     status_counts = Counter(c.get('support_status') for c in updated_claims)
     factual_unsupported = sum(
-        1 for c in updated_claims
-        if c.get('claim_type') == 'factual' and c.get('support_status') == 'unsupported'
+        1 for c in updated_claims if c.get('claim_type') == 'factual' and c.get('support_status') == 'unsupported'
     )
     total_factual = sum(1 for c in updated_claims if c.get('claim_type') == 'factual')
 
@@ -255,14 +257,19 @@ def cmd_verify(args: argparse.Namespace) -> None:
     if args.strict and factual_unsupported > 0:
         passed = False
 
-    print(json.dumps({
-        'status': 'pass' if passed else 'fail',
-        'verified': verified,
-        'support_status_counts': dict(status_counts),
-        'factual_unsupported': factual_unsupported,
-        'total_factual': total_factual,
-        'unsupported_rate': round(factual_unsupported / max(total_factual, 1), 3),
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                'status': 'pass' if passed else 'fail',
+                'verified': verified,
+                'support_status_counts': dict(status_counts),
+                'factual_unsupported': factual_unsupported,
+                'total_factual': total_factual,
+                'unsupported_rate': round(factual_unsupported / max(total_factual, 1), 3),
+            },
+            indent=2,
+        )
+    )
 
     if not passed:
         sys.exit(1)
@@ -294,7 +301,8 @@ def cmd_report(args: argparse.Namespace) -> None:
 
     # Unsupported factual claims (the failures)
     unsupported_factual = [
-        c for c in unique
+        c
+        for c in unique
         if c.get('claim_type') == 'factual' and c.get('support_status') in ('unsupported', 'needs_review')
     ]
     if unsupported_factual:
@@ -317,6 +325,7 @@ def cmd_report(args: argparse.Namespace) -> None:
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(

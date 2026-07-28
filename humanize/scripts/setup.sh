@@ -40,7 +40,7 @@ chmod 700 "$CONFIG_DIR"
 if [ -f "$CONFIG_FILE" ]; then
     echo ""
     echo "Existing config found at $CONFIG_FILE"
-    read -p "Overwrite? (y/N): " overwrite
+    read -r -p "Overwrite? (y/N): " overwrite
     if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
         echo "Keeping existing config."
         echo ""
@@ -52,7 +52,7 @@ fi
 echo ""
 echo "Get your API key from: https://undetectable.ai/develop"
 echo ""
-read -p "Undetectable AI API key: " api_key
+read -r -p "Undetectable AI API key: " api_key
 
 cat > "$CONFIG_FILE" <<CONF_EOF
 {

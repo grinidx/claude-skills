@@ -145,7 +145,7 @@ install_skill() {
         if [ "$AUTO" = "1" ]; then
             info "Replacing with symlink (--all mode)"
         else
-            read -p "    Replace with symlink? (y/N): " replace
+            read -r -p "    Replace with symlink? (y/N): " replace
             if [[ ! "$replace" =~ ^[Yy]$ ]]; then
                 warn "Skipped $skill"
                 return 0
@@ -328,9 +328,9 @@ elif [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
         echo -e "  $((i+1)). $skill$status"
     done
     echo
-    read -p "Install all? (Y/n): " install_all
+    read -r -p "Install all? (Y/n): " install_all
     if [[ "$install_all" =~ ^[Nn]$ ]]; then
-        read -p "Which skills? (space-separated, e.g. 'garmin humanize'): " -a REQUESTED_SKILLS
+        read -r -p "Which skills? (space-separated, e.g. 'garmin humanize'): " -a REQUESTED_SKILLS
         if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
             echo "Nothing selected. Exiting."
             exit 0

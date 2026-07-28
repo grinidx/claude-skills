@@ -165,6 +165,7 @@ from pathlib import Path
 
 # Ensure scripts/ is importable
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from garmin_client import get_client, load_config, GarminConfigError
@@ -175,10 +176,7 @@ class TestLoadConfig:
 
     def test_loads_valid_config(self, tmp_path):
         config_file = tmp_path / "config.json"
-        config_file.write_text(json.dumps({
-            "email": "test@example.com",
-            "password": "secret123"
-        }))
+        config_file.write_text(json.dumps({"email": "test@example.com", "password": "secret123"}))
         config = load_config(config_path=str(config_file))
         assert config["email"] == "test@example.com"
         assert config["password"] == "secret123"
@@ -305,6 +303,7 @@ DEFAULT_TOKEN_DIR = os.path.expanduser("~/.garmin/tokens")
 
 class GarminConfigError(Exception):
     """Raised when Garmin configuration is invalid or missing."""
+
     pass
 
 
@@ -322,22 +321,15 @@ def load_config(config_path: str = DEFAULT_CONFIG_PATH) -> dict:
     """
     path = Path(config_path)
     if not path.exists():
-        raise GarminConfigError(
-            f"Config file not found: {config_path}\n"
-            f"Run setup.sh to configure credentials."
-        )
+        raise GarminConfigError(f"Config file not found: {config_path}\nRun setup.sh to configure credentials.")
 
     with open(path) as f:
         config = json.load(f)
 
     if "email" not in config or not config["email"]:
-        raise GarminConfigError(
-            f"Missing 'email' in {config_path}. Run setup.sh to reconfigure."
-        )
+        raise GarminConfigError(f"Missing 'email' in {config_path}. Run setup.sh to reconfigure.")
     if "password" not in config or not config["password"]:
-        raise GarminConfigError(
-            f"Missing 'password' in {config_path}. Run setup.sh to reconfigure."
-        )
+        raise GarminConfigError(f"Missing 'password' in {config_path}. Run setup.sh to reconfigure.")
 
     return config
 
@@ -434,6 +426,7 @@ from datetime import date
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from garmin_health import format_daily_vitals, format_weekly_vitals
@@ -517,14 +510,16 @@ class TestFormatWeeklyVitals:
     def test_formats_seven_days(self):
         days = []
         for i in range(7):
-            days.append({
-                "date": f"2026-02-{16+i:02d}",
-                "resting_hr": 56 + i,
-                "hrv": 40 + i,
-                "body_battery_peak": 70 + i,
-                "steps": 7000 + (i * 500),
-                "stress_avg": 30 + i,
-            })
+            days.append(
+                {
+                    "date": f"2026-02-{16 + i:02d}",
+                    "resting_hr": 56 + i,
+                    "hrv": 40 + i,
+                    "body_battery_peak": 70 + i,
+                    "steps": 7000 + (i * 500),
+                    "stress_avg": 30 + i,
+                }
+            )
         result = format_weekly_vitals(days)
         assert "Mon" in result or "Tue" in result  # Day headers present
         assert "Avg" in result  # Average column present
@@ -532,14 +527,16 @@ class TestFormatWeeklyVitals:
 
     def test_handles_partial_week(self):
         """If fewer than 7 days, should still format what's available."""
-        days = [{
-            "date": "2026-02-22",
-            "resting_hr": 58,
-            "hrv": 42,
-            "body_battery_peak": 75,
-            "steps": 8432,
-            "stress_avg": 34,
-        }]
+        days = [
+            {
+                "date": "2026-02-22",
+                "resting_hr": 58,
+                "hrv": 42,
+                "body_battery_peak": 75,
+                "steps": 8432,
+                "stress_avg": 34,
+            }
+        ]
         result = format_weekly_vitals(days)
         assert "58" in result
 ```
@@ -641,7 +638,11 @@ def format_daily_vitals(
         bb = body_battery[0] if isinstance(body_battery, list) else body_battery
         charged = bb.get("charged", "?")
         drained = bb.get("drained", "?")
-        bb_str = f"{charged} → {charged - drained}" if isinstance(charged, (int, float)) and isinstance(drained, (int, float)) else "No data"
+        bb_str = (
+            f"{charged} → {charged - drained}"
+            if isinstance(charged, (int, float)) and isinstance(drained, (int, float))
+            else "No data"
+        )
     else:
         bb_str = "No data"
 
@@ -745,7 +746,7 @@ def format_weekly_vitals(days: list[dict]) -> str:
             if v is None:
                 cells.append("-")
             elif fmt == "k":
-                cells.append(f"{v/1000:.1f}k")
+                cells.append(f"{v / 1000:.1f}k")
             else:
                 cells.append(str(v))
 
@@ -753,7 +754,7 @@ def format_weekly_vitals(days: list[dict]) -> str:
         numeric = [v for v in values if v is not None]
         if numeric:
             avg = sum(numeric) / len(numeric)
-            avg_str = f"{avg/1000:.1f}k" if fmt == "k" else str(round(avg))
+            avg_str = f"{avg / 1000:.1f}k" if fmt == "k" else str(round(avg))
         else:
             avg_str = "-"
 
@@ -804,13 +805,15 @@ def main():
     else:
         cdate = resolve_date(args.command)
         data = fetch_day_data(client, cdate)
-        print(format_daily_vitals(
-            cdate=cdate,
-            stats=data["stats"],
-            hrv=data["hrv"],
-            body_battery=data["body_battery"],
-            stress=data["stress"],
-        ))
+        print(
+            format_daily_vitals(
+                cdate=cdate,
+                stats=data["stats"],
+                hrv=data["hrv"],
+                body_battery=data["body_battery"],
+                stress=data["stress"],
+            )
+        )
 
 
 if __name__ == "__main__":
@@ -852,6 +855,7 @@ Create `/home/devops/claude-skills/garmin/tests/test_garmin_sleep.py`:
 import pytest
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from garmin_sleep import format_sleep_data
@@ -863,9 +867,9 @@ MOCK_SLEEP = {
             "overall": {"value": 82},
         },
         "sleepTimeSeconds": 26640,  # 7h 24m
-        "deepSleepSeconds": 4320,   # 1h 12m
-        "lightSleepSeconds": 13680, # 3h 48m
-        "remSleepSeconds": 7560,    # 2h 06m
+        "deepSleepSeconds": 4320,  # 1h 12m
+        "lightSleepSeconds": 13680,  # 3h 48m
+        "remSleepSeconds": 7560,  # 2h 06m
         "awakeSleepSeconds": 1080,  # 18m
         "sleepStartTimestampGMT": 1740182400000,
         "sleepEndTimestampGMT": 1740209040000,
@@ -884,7 +888,7 @@ class TestFormatSleepData:
         assert "1h 12m" in result  # deep
         assert "3h 48m" in result  # light
         assert "2h 06m" in result  # REM
-        assert "18m" in result      # awake
+        assert "18m" in result  # awake
 
     def test_handles_missing_sleep_data(self):
         result = format_sleep_data("2026-02-22", {})
@@ -1071,6 +1075,7 @@ Create `/home/devops/claude-skills/garmin/tests/test_garmin_activities.py`:
 import pytest
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from garmin_activities import format_activities, format_training_status
@@ -1491,10 +1496,10 @@ class TestGenerateDailyMarkdown:
             training_status=MOCK_TRAINING_STATUS,
             training_readiness=MOCK_TRAINING_READINESS,
         )
-        assert "58 bpm" in md       # resting HR
-        assert "82" in md           # sleep score
-        assert "HYROX" in md        # activity name
-        assert "44" in md           # VO2 max
+        assert "58 bpm" in md  # resting HR
+        assert "82" in md  # sleep score
+        assert "HYROX" in md  # activity name
+        assert "44" in md  # VO2 max
 
     def test_handles_no_activities(self):
         md = generate_daily_markdown(
@@ -1702,10 +1707,7 @@ def main():
     sleep_data = fetch_sleep(client, cdate)
     activities_data = fetch_activities(client, days=1)
     # Filter activities to just this date
-    activities = [
-        a for a in activities_data
-        if a.get("startTimeLocal", "").startswith(cdate)
-    ]
+    activities = [a for a in activities_data if a.get("startTimeLocal", "").startswith(cdate)]
     training_status, training_readiness = fetch_training(client, cdate)
 
     # Generate and write

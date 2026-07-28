@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a change to an existing skill, or a new one
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change?
+      options:
+        - Change to an existing skill
+        - A new skill
+        - Tooling / CI / docs
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you are in, not the feature you want. It usually leads somewhere better.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried instead?
+      description: Existing skills, other tools, doing it by hand.

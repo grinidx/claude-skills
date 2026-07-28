@@ -1,0 +1,110 @@
+version: 2
+
+# Known limitation, accepted rather than worked around: the five pip manifests
+# below use open ranges (`PyYAML>=6.0`, `requests>=2.28`). Dependabot generally
+# leaves `>=` constraints alone, because a new release already satisfies them --
+# so those ecosystems will be quiet until something is actually pinned. They are
+# listed anyway: they cost nothing, and they start working the moment a pin
+# appears (garmin's requirements.txt is the likeliest first case).
+#
+# github-actions is where the value is today. CI pins every action to a commit
+# SHA, which is only safe if something keeps the pins current; that something is
+# this file.
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "ci"
+    groups:
+      # One PR for all action bumps rather than one per action. The CI matrix is
+      # the test, and it runs the same either way.
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /deep-research
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "deps(deep-research)"
+    groups:
+      deep-research:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /garmin
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "deps(garmin)"
+    groups:
+      garmin:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /gpt-image-2
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "deps(gpt-image-2)"
+    groups:
+      gpt-image-2:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /humanize
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "deps(humanize)"
+    groups:
+      humanize:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: /pst-to-markdown
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+      - python
+    commit-message:
+      prefix: "deps(pst-to-markdown)"
+    groups:
+      pst-to-markdown:
+        patterns:
+          - "*"
+    ignore:
+      # libratom pins numpy==1.23.5 transitively, and that pin is what caps the
+      # skill at Python 3.11. A numpy bump proposed independently of libratom
+      # would conflict with libratom's own pin and could not be merged.
+      - dependency-name: numpy
