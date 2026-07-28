@@ -92,3 +92,13 @@ No secrets in the repo, ever. Each skill externalises its credentials to a
 location outside the tree (`~/.garmin/`, `~/.humanize/`, `$OPENAI_API_KEY`). If a
 new skill needs a credential, add it to the README and CLAUDE.md credentials
 tables — CI checks that the tables list every skill.
+
+## git blame
+
+The repo was reformatted once with `ruff format`. That commit is listed in
+`.git-blame-ignore-revs`, which GitHub honours automatically. To get the same
+behaviour locally:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
