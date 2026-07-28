@@ -15,7 +15,7 @@ claude-skills/
 ├── tests/            # Repo-level tests (installer behaviour)
 ├── install.sh        # Claude installer (symlinks into ~/.claude/skills)
 ├── install-codex.sh  # Codex installer (installs into ~/.codex/skills)
-├── .github/workflows/ci.yml  # CI: deep-research (py3.9-3.13) + garmin (py3.12-3.13) + e2e smoke
+├── .github/workflows/ci.yml  # CI: deep-research (py3.9-3.13) + garmin (py3.12-3.13) + installers + e2e smoke
 └── README.md         # User-facing documentation
 ```
 
@@ -48,6 +48,8 @@ skill-name/
 4. Add the skill to the README tables (skills list, credentials, requirements)
 5. Test with `./install.sh <skill-name>` and `./install-codex.sh <skill-name>`
 
+Steps 2-3 are enforced in CI by `tests/test_install_codex.sh`, which fails if the two installers offer different skills or if a skill is missing a `check_deps`/`post_install` case.
+
 ### Modifying an Existing Skill
 
 - The source `SKILL.md` is used directly by Claude and transformed for Codex at install time
@@ -70,6 +72,7 @@ No secrets in the repo. Each skill externalises credentials:
 
 - **Python skills:** Each has its own `requirements.txt` and `.venv/`
 - Both installers handle venv creation and dependency installation automatically
+- **Garmin needs Python 3.12+** — `garminconnect` 0.3.x declares `Requires-Python >=3.12`. Both installers and `garmin/scripts/setup.sh` check this up front, so the failure is a clear message rather than a pip resolver dump
 
 ## Conventions
 
