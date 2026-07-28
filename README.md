@@ -29,7 +29,7 @@
 > | Outlook | [dbhq-uk/outlook-graph-skill](https://github.com/dbhq-uk/outlook-graph-skill) | `/plugin install outlook-graph@dbhq` |
 > | PST to Markdown | [dbhq-uk/outlook-graph-skill](https://github.com/dbhq-uk/outlook-graph-skill) (same pack) | `/plugin install outlook-graph@dbhq` |
 > | Trello | [dbhq-uk/trello-skill](https://github.com/dbhq-uk/trello-skill) | `/plugin install trello@dbhq` |
-> | Deep Research | [dbhq-uk/legwork](https://github.com/dbhq-uk/legwork) (renamed **Legwork**) | `/plugin install legwork@dbhq` |
+> | Deep Research | [dbhq-uk/legwork-skill](https://github.com/dbhq-uk/legwork-skill) (renamed **Legwork**) | `/plugin install legwork@dbhq` |
 
 ## 🚀 Installation
 
