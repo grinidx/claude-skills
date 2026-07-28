@@ -1,0 +1,75 @@
+name: Bug report
+description: Something in a skill does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not paste API keys, tokens, or personal data (email addresses,
+        health data, message contents) into this form.
+
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which skill?
+      options:
+        - deep-research
+        - garmin
+        - gpt-image-2
+        - humanize
+        - pst-to-markdown
+        - installers (install.sh / install-codex.sh)
+        - something else
+    validations:
+      required: true
+
+  - type: dropdown
+    id: host
+    attributes:
+      label: Which host?
+      options:
+        - Claude Code
+        - Codex
+        - both
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ./install.sh garmin
+        2. Ask for "body battery"
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      description: Redact anything sensitive first. This is rendered as a code block.
+      render: shell
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: "`python3 --version`. Floors differ per skill — pst-to-markdown caps at 3.11, garmin needs 3.12+."
+      placeholder: "3.12.3"
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Ubuntu 24.04 / macOS 15.2 / WSL2"

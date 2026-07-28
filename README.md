@@ -4,6 +4,7 @@
 
 **Extend [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and Codex with external service integrations and local tooling.**
 
+[![CI](https://github.com/grinidx/claude-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/grinidx/claude-skills/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Skills-blueviolet?logo=anthropic)](https://docs.anthropic.com/en/docs/claude-code)
 [![Codex](https://img.shields.io/badge/Codex-Skills-0A66C2)]()
@@ -80,11 +81,30 @@ No secrets are stored in this repo. Each skill externalises credentials:
 
 | Skill | Dependencies |
 |-------|-------------|
-| 📨 PST to Markdown | Python 3 · pip · `readpst` (optional fallback) |
+| 📨 PST to Markdown | Python 3.9–**3.11** · pip · `readpst` (optional fallback). The ceiling is `libratom`, which pins `numpy==1.23.5` — no wheel above cp311 |
 | ⌚ Garmin | Python 3.12+ · pip (required by `garminconnect` 0.3.x) |
-| ✍️ Humanize | Python 3 · pip (commercial API only) |
-| 🎨 GPT Image 2 | Python 3 · pip · `imagemagick` (optional) |
+| ✍️ Humanize | Python 3.9+ · pip (commercial API only) |
+| 🎨 GPT Image 2 | Python 3.9+ · pip · `imagemagick` (optional) |
 | 🔬 Deep Research | Python 3.9+ (stdlib only). Optional for fallback scraping: Node.js · Bright Data CLI (`npm install -g @brightdata/cli`) · Bright Data account |
+
+> **Note on PST to Markdown:** the Python ceiling is a real constraint, not caution.
+> `pip install -r pst-to-markdown/requirements.txt` fails on 3.12+ because
+> `libratom` pins an old numpy that cannot build there. CI asserts the 3.11
+> ceiling so it stays a documented fact rather than a surprise during setup.
+
+## 🧪 Development
+
+Every skill has a test suite and a CI job. Nothing in CI touches the network.
+
+```bash
+ruff check . && ruff format --check .        # lint
+python -m pytest tests/test_repo_hygiene.py  # frontmatter + doc-table sync
+bash tests/test_install_codex.sh             # installer parity
+python -m pytest <skill>/tests/              # a skill's own suite
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full checklist, and
+[SECURITY.md](./SECURITY.md) for how to report a vulnerability.
 
 ## 📄 License
 

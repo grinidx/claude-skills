@@ -86,9 +86,13 @@ target="$TMP_HOME/.codex/skills/deep-research"
 # original -- that is the whole point of the Codex install.
 [ ! -L "$target/SKILL.md" ] || fail "SKILL.md must be generated, not symlinked"
 
+# The tildes below are literal text being searched for inside the generated
+# SKILL.md, not paths to expand -- SC2088 is a false positive here.
+# shellcheck disable=SC2088
 if grep -q "~/.claude/skills/" "$target/SKILL.md"; then
     fail "generated SKILL.md still contains Claude-specific paths"
 fi
+# shellcheck disable=SC2088
 grep -q "~/.codex/skills/deep-research" "$target/SKILL.md" \
     || fail "generated SKILL.md has no rewritten Codex path"
 

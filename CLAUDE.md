@@ -12,10 +12,14 @@ claude-skills/
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
 ├── deep-research/    # Multi-source web research (built-in WebSearch first, Bright Data fallback)
 ├── docs/plans/       # Per-skill design & implementation docs (<date>-<skill>-{design,plan}.md)
-├── tests/            # Repo-level tests (installer behaviour)
+├── tests/            # Repo-level tests (installer behaviour, repo hygiene)
 ├── install.sh        # Claude installer (symlinks into ~/.claude/skills)
 ├── install-codex.sh  # Codex installer (installs into ~/.codex/skills)
-├── .github/workflows/ci.yml  # CI: deep-research (py3.9-3.13) + garmin (py3.12-3.13) + installers + e2e smoke
+├── pyproject.toml    # Repo tooling config (ruff only — this is not a package)
+├── CONTRIBUTING.md   # How to add/modify a skill; local equivalents of every CI check
+├── SECURITY.md       # Private vulnerability reporting
+├── .github/workflows/ci.yml  # CI: every skill + lint + repo hygiene + installers + e2e smoke
+├── .github/dependabot.yml    # Weekly github-actions + 5 pip ecosystems
 └── README.md         # User-facing documentation
 ```
 
@@ -45,10 +49,11 @@ skill-name/
 1. Create a directory with `SKILL.md`, `setup.sh`, `scripts/`, and `README.md`
 2. Add the skill name to `AVAILABLE_SKILLS` in both `install.sh` and `install-codex.sh`
 3. Add a `check_deps_<skill>()` function and `post_install` case in both installers
-4. Add the skill to the README tables (skills list, credentials, requirements)
-5. Test with `./install.sh <skill-name>` and `./install-codex.sh <skill-name>`
+4. Add the skill to the README tables (skills list, credentials, requirements) and to this file's structure tree and credentials table
+5. Add a `tests/` directory and a job in `.github/workflows/ci.yml` (including `ci-ok`'s `needs:` list)
+6. Test with `./install.sh <skill-name>` and `./install-codex.sh <skill-name>`
 
-Steps 2-3 are enforced in CI by `tests/test_install_codex.sh`, which fails if the two installers offer different skills or if a skill is missing a `check_deps`/`post_install` case.
+Steps 2-3 are enforced in CI by `tests/test_install_codex.sh`, which fails if the two installers offer different skills or if a skill is missing a `check_deps`/`post_install` case. Step 4 is enforced by `tests/test_repo_hygiene.py`, which also checks that every `SKILL.md` has valid frontmatter whose `name` matches its directory.
 
 ### Modifying an Existing Skill
 
@@ -73,6 +78,27 @@ No secrets in the repo. Each skill externalises credentials:
 - **Python skills:** Each has its own `requirements.txt` and `.venv/`
 - Both installers handle venv creation and dependency installation automatically
 - **Garmin needs Python 3.12+** — `garminconnect` 0.3.x declares `Requires-Python >=3.12`. Both installers and `garmin/scripts/setup.sh` check this up front, so the failure is a clear message rather than a pip resolver dump
+- **PST to Markdown caps at Python 3.11** — `libratom` pins `numpy==1.23.5`, whose newest wheel is cp311, so `pip install -r requirements.txt` fails outright on 3.12+. The two floors point in opposite directions: there is no single Python that runs both garmin and pst-to-markdown
+
+## CI
+
+`.github/workflows/ci.yml` runs a job per skill plus three repo-wide gates. Every
+job is hermetic — no network, no credentials, no real sleeps.
+
+| Job | What it guards |
+|-----|----------------|
+| `lint` | `ruff check` + `ruff format --check` (config in `pyproject.toml`, `target-version = py39`) |
+| `repo-hygiene` | SKILL.md frontmatter, README/CLAUDE.md table sync, shellcheck |
+| `installers` | `install.sh` / `install-codex.sh` parity, real Codex install |
+| per-skill | each skill's `tests/`, on a floor + ceiling Python matrix |
+| `pst-to-markdown-install` | asserts the full `requirements.txt` installs on 3.11 |
+| `smoke` | deep-research end-to-end lifecycle against shipped fixtures |
+| `ci-ok` | aggregates the rest; this is the single required check for branch protection |
+
+Adding a job means adding it to `ci-ok`'s `needs:` list — the branch protection
+rule points only at `ci-ok`, so a job missing from that list is a job nobody is
+gated on. `tests/test_repo_hygiene.py` is stdlib-only by design so it can run
+before any skill's dependencies are installed.
 
 ## Conventions
 
