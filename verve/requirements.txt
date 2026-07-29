@@ -3,4 +3,4 @@
 # resolving on Python 3.9, whose ceiling is 2.32.5 (requests 2.33+ needs 3.10).
 # Deliberately not pinned tighter -- 3.9 then installs 2.32.x and 3.13 installs
 # the current release, so CI exercises both.
-requests>=2.32.4
+requests>=2.34.2
