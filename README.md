@@ -19,7 +19,6 @@
 | Skill | Description |
 |-------|-------------|
 | ⌚ **[Garmin](./garmin/)** | Garmin Connect health & fitness data — Body Battery, HRV, sleep, activities, VO2 max, training load/readiness, daily snapshots & weekly rollups |
-| ✍️ **[Verve](./verve/)** | Strip AI tells from prose and put a human voice back, in British English — 40+ tells across 5 categories with before/after examples, tone presets (neutral/casual/professional/academic), scored exit gate with a fidelity veto, optional Undetectable AI API |
 | 🎨 **[GPT Image 2](./gpt-image-2/)** | Generate & edit images via OpenAI's GPT Image 2 — 21 style presets, platform sizing, draft→final flow, carousels, photo edits, cost-aware |
 
 > **Moved to their own repositories** under [github.com/dbhq-uk](https://github.com/dbhq-uk), and installable via the DBHQ marketplace (`/plugin marketplace add dbhq-uk/marketplace`):
@@ -30,6 +29,7 @@
 > | PST to Markdown | [dbhq-uk/outlook-graph-skill](https://github.com/dbhq-uk/outlook-graph-skill) (same pack) | `/plugin install outlook-graph@dbhq` |
 > | Trello | [dbhq-uk/trello-skill](https://github.com/dbhq-uk/trello-skill) | `/plugin install trello@dbhq` |
 > | Deep Research | [dbhq-uk/legwork-skill](https://github.com/dbhq-uk/legwork-skill) (renamed **Legwork**) | `/plugin install legwork@dbhq` |
+> | Verve | [dbhq-uk/verve-skill](https://github.com/dbhq-uk/verve-skill) (renamed from **humanize**) | `/plugin install verve@dbhq` |
 
 ## 🚀 Installation
 
@@ -44,8 +44,8 @@ cd claude-skills
 ./install-codex.sh --all
 
 # Or pick specific ones
-./install.sh garmin verve
-./install-codex.sh garmin verve
+./install.sh garmin gpt-image-2
+./install-codex.sh garmin gpt-image-2
 
 # Or interactive mode
 ./install.sh
@@ -77,7 +77,6 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | Skill | Credential Location | Setup |
 |-------|---------------------|-------|
 | ⌚ Garmin | `~/.garmin/` | `garmin/scripts/setup.sh` |
-| ✍️ Verve | `~/.verve/` (optional) | `verve/scripts/setup.sh` |
 | 🎨 GPT Image 2 | `$OPENAI_API_KEY` env var | `gpt-image-2/setup.sh` |
 
 ## ⚙️ Requirements
@@ -85,9 +84,7 @@ No secrets are stored in this repo. Each skill externalises credentials:
 | Skill | Dependencies |
 |-------|-------------|
 | ⌚ Garmin | Python 3.12+ · pip (required by `garminconnect` 0.3.x) |
-| ✍️ Verve | Python 3.9+ · pip (commercial API only) |
 | 🎨 GPT Image 2 | Python 3.9+ · pip · `imagemagick` (optional) |
-
 
 ## 🧪 Development
 

@@ -34,11 +34,8 @@ the tree:
 
 | Skill | Location |
 |-------|----------|
-| PST to Markdown | none (fully local) |
 | Garmin | `~/.garmin/` |
-| Verve | `~/.verve/` (optional, commercial API only) |
 | GPT Image 2 | `$OPENAI_API_KEY` environment variable |
-| Deep Research | none required; optional Bright Data CLI login |
 
 If you find a credential committed to this repo, please report it as above and
 treat it as live until confirmed otherwise.

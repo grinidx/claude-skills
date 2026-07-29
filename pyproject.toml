@@ -3,7 +3,7 @@
 # is ever built or published.
 
 [tool.ruff]
-# 3.9 is the repo-wide floor -- gpt-image-2 and verve both run there.
+# 3.9 is the repo-wide floor -- gpt-image-2 runs there.
 # (garmin needs 3.12+, but linting it against the lower floor costs nothing and
 # keeps one setting instead of per-directory overrides.)
 target-version = "py39"
@@ -46,7 +46,7 @@ ignore = [
 "**/tests/*.py" = ["E402"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["gpt_image_2", "extract_pst", "verve_api"]
+known-first-party = ["gpt_image_2", "extract_pst"]
 
 [tool.ruff.format]
 quote-style = "preserve"

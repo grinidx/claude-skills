@@ -7,7 +7,6 @@ A collection of skills that extend Claude and Codex with external service integr
 ```
 claude-skills/
 ├── garmin/           # Garmin Connect health & fitness data (Python/garminconnect)
-├── verve/            # Strip AI tells, restore voice (prompt-driven + optional API)
 ├── gpt-image-2/      # OpenAI GPT Image 2 generation & editing (Python)
 ├── docs/plans/       # Per-skill design & implementation docs (<date>-<skill>-{design,plan}.md)
 ├── tests/            # Repo-level tests (installer behaviour, repo hygiene)
@@ -66,7 +65,6 @@ No secrets in the repo. Each skill externalises credentials:
 | Skill | Location |
 |-------|----------|
 | Garmin | `~/.garmin/` |
-| Verve | `~/.verve/` (optional, for commercial API; falls back to `~/.humanize/`) |
 | GPT Image 2 | `$OPENAI_API_KEY` env var |
 
 ### Dependencies

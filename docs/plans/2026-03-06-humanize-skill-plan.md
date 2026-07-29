@@ -2,7 +2,8 @@
 
 > **Historical, and already executed.** The skill shipped as `humanize` and was
 > renamed to `verve` in July 2026. Paths and names below are as they were on the
-> date of writing; the current skill lives in `verve/`.
+> date of writing; the skill now lives in its own repo at
+> [dbhq-uk/verve-skill](https://github.com/dbhq-uk/verve-skill).
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
