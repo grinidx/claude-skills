@@ -1,5 +1,9 @@
 # Humanize Skill Implementation Plan
 
+> **Historical, and already executed.** The skill shipped as `humanize` and was
+> renamed to `verve` in July 2026. Paths and names below are as they were on the
+> date of writing; the current skill lives in `verve/`.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Create a Claude Code skill that rewrites AI-generated text to sound natural and pass AI detectors, using Claude Code's own prompt engine or an optional commercial API.

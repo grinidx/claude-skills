@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for humanize-api.py — the optional Undetectable AI engine.
+"""Tests for verve-api.py — the optional Undetectable AI engine.
 
 No network and no waiting: requests.post and time.sleep are both patched, so the
 timeout case exercises all MAX_POLLS iterations in microseconds rather than the
@@ -19,12 +19,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-SCRIPT = Path(__file__).parent.parent / "scripts" / "humanize-api.py"
+SCRIPT = Path(__file__).parent.parent / "scripts" / "verve-api.py"
 
-_spec = importlib.util.spec_from_file_location("humanize_api", SCRIPT)
-humanize_api = importlib.util.module_from_spec(_spec)
-sys.modules["humanize_api"] = humanize_api
-_spec.loader.exec_module(humanize_api)
+_spec = importlib.util.spec_from_file_location("verve_api", SCRIPT)
+verve_api = importlib.util.module_from_spec(_spec)
+sys.modules["verve_api"] = verve_api
+_spec.loader.exec_module(verve_api)
 
 
 def response(payload: dict, status: int = 200) -> MagicMock:
@@ -42,155 +42,167 @@ def failing_response(exc: Exception) -> MagicMock:
     return resp
 
 
-class TestLoadConfig(unittest.TestCase):
+class ConfigSandbox(unittest.TestCase):
+    """Points both config paths into a temp dir.
+
+    Both matter: load_config falls back to the legacy ~/.humanize path, so a
+    test that only redirects CONFIG_FILE would read the developer's real key
+    when it meant to find nothing.
+    """
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self._saved = humanize_api.CONFIG_FILE
-        humanize_api.CONFIG_FILE = Path(self.tmp.name) / "config.json"
+        self.root = Path(self.tmp.name)
+        self._saved = (verve_api.CONFIG_FILE, verve_api.LEGACY_CONFIG_FILE)
+        verve_api.CONFIG_FILE = self.root / "config.json"
+        verve_api.LEGACY_CONFIG_FILE = self.root / "legacy.json"
 
     def tearDown(self):
-        humanize_api.CONFIG_FILE = self._saved
+        verve_api.CONFIG_FILE, verve_api.LEGACY_CONFIG_FILE = self._saved
         self.tmp.cleanup()
 
+
+class TestLoadConfig(ConfigSandbox):
     def test_missing_config_exits_one(self):
         with self.assertRaises(SystemExit) as ctx:
-            humanize_api.load_config()
+            verve_api.load_config()
         self.assertEqual(ctx.exception.code, 1)
 
     def test_reads_an_existing_config(self):
-        humanize_api.CONFIG_FILE.write_text(json.dumps({"api_key": "secret"}))
-        self.assertEqual(humanize_api.load_config(), {"api_key": "secret"})
+        verve_api.CONFIG_FILE.write_text(json.dumps({"api_key": "secret"}))
+        self.assertEqual(verve_api.load_config(), {"api_key": "secret"})
 
     def test_config_without_api_key_still_loads(self):
         # load_config only reads; main() is what rejects a keyless config.
-        humanize_api.CONFIG_FILE.write_text(json.dumps({"other": "value"}))
-        self.assertEqual(humanize_api.load_config(), {"other": "value"})
+        verve_api.CONFIG_FILE.write_text(json.dumps({"other": "value"}))
+        self.assertEqual(verve_api.load_config(), {"other": "value"})
+
+    def test_falls_back_to_the_legacy_humanize_path(self):
+        # Anyone who set up the skill before the Jul 2026 rename has their key
+        # at ~/.humanize/config.json and should not have to re-enter it.
+        verve_api.LEGACY_CONFIG_FILE.write_text(json.dumps({"api_key": "old-key"}))
+        self.assertEqual(verve_api.load_config(), {"api_key": "old-key"})
+
+    def test_current_path_wins_over_legacy(self):
+        verve_api.CONFIG_FILE.write_text(json.dumps({"api_key": "new-key"}))
+        verve_api.LEGACY_CONFIG_FILE.write_text(json.dumps({"api_key": "old-key"}))
+        self.assertEqual(verve_api.load_config(), {"api_key": "new-key"})
+
+    def test_config_path_reports_the_current_path_when_neither_exists(self):
+        # The setup hint should point people at the new location, not the old.
+        self.assertEqual(verve_api.config_path(), verve_api.CONFIG_FILE)
 
 
 class TestSubmitText(unittest.TestCase):
     def test_posts_to_submit_with_key_and_content(self):
-        with patch.object(humanize_api.requests, "post", return_value=response({"id": "doc-123"})) as post:
-            doc_id = humanize_api.submit_text("my-key", "some text")
+        with patch.object(verve_api.requests, "post", return_value=response({"id": "doc-123"})) as post:
+            doc_id = verve_api.submit_text("my-key", "some text")
 
         self.assertEqual(doc_id, "doc-123")
         args, kwargs = post.call_args
-        self.assertEqual(args[0], f"{humanize_api.API_BASE}/submit")
+        self.assertEqual(args[0], f"{verve_api.API_BASE}/submit")
         self.assertEqual(kwargs["headers"]["apikey"], "my-key")
         self.assertEqual(kwargs["json"], {"content": "some text"})
 
     def test_sends_a_timeout(self):
         # A request without a timeout can hang the skill indefinitely.
-        with patch.object(humanize_api.requests, "post", return_value=response({"id": "doc-123"})) as post:
-            humanize_api.submit_text("my-key", "text")
+        with patch.object(verve_api.requests, "post", return_value=response({"id": "doc-123"})) as post:
+            verve_api.submit_text("my-key", "text")
         self.assertIn("timeout", post.call_args.kwargs)
 
     def test_response_without_id_exits_one(self):
-        with patch.object(humanize_api.requests, "post", return_value=response({"error": "bad request"})):
+        with patch.object(verve_api.requests, "post", return_value=response({"error": "bad request"})):
             with self.assertRaises(SystemExit) as ctx:
-                humanize_api.submit_text("my-key", "text")
+                verve_api.submit_text("my-key", "text")
         self.assertEqual(ctx.exception.code, 1)
 
     def test_empty_id_is_treated_as_missing(self):
-        with patch.object(humanize_api.requests, "post", return_value=response({"id": ""})):
+        with patch.object(verve_api.requests, "post", return_value=response({"id": ""})):
             with self.assertRaises(SystemExit):
-                humanize_api.submit_text("my-key", "text")
+                verve_api.submit_text("my-key", "text")
 
     def test_http_error_propagates(self):
         error = RuntimeError("401 Unauthorized")
-        with patch.object(humanize_api.requests, "post", return_value=failing_response(error)):
+        with patch.object(verve_api.requests, "post", return_value=failing_response(error)):
             with self.assertRaises(RuntimeError):
-                humanize_api.submit_text("bad-key", "text")
+                verve_api.submit_text("bad-key", "text")
 
 
 class TestPollResult(unittest.TestCase):
     def test_returns_output_when_done(self):
         with (
-            patch.object(
-                humanize_api.requests, "post", return_value=response({"status": "done", "output": "humanised"})
-            ),
-            patch.object(humanize_api.time, "sleep") as sleep,
+            patch.object(verve_api.requests, "post", return_value=response({"status": "done", "output": "humanised"})),
+            patch.object(verve_api.time, "sleep") as sleep,
         ):
-            self.assertEqual(humanize_api.poll_result("k", "doc-1"), "humanised")
+            self.assertEqual(verve_api.poll_result("k", "doc-1"), "humanised")
         sleep.assert_not_called()
 
     def test_polls_until_done(self):
         pending = response({"status": "pending"})
         done = response({"status": "done", "output": "final"})
         with (
-            patch.object(humanize_api.requests, "post", side_effect=[pending, pending, done]) as post,
-            patch.object(humanize_api.time, "sleep") as sleep,
+            patch.object(verve_api.requests, "post", side_effect=[pending, pending, done]) as post,
+            patch.object(verve_api.time, "sleep") as sleep,
         ):
-            self.assertEqual(humanize_api.poll_result("k", "doc-1"), "final")
+            self.assertEqual(verve_api.poll_result("k", "doc-1"), "final")
         self.assertEqual(post.call_count, 3)
         self.assertEqual(sleep.call_count, 2)
 
     def test_posts_the_document_id(self):
         with (
-            patch.object(
-                humanize_api.requests, "post", return_value=response({"status": "done", "output": "x"})
-            ) as post,
-            patch.object(humanize_api.time, "sleep"),
+            patch.object(verve_api.requests, "post", return_value=response({"status": "done", "output": "x"})) as post,
+            patch.object(verve_api.time, "sleep"),
         ):
-            humanize_api.poll_result("my-key", "doc-77")
+            verve_api.poll_result("my-key", "doc-77")
         args, kwargs = post.call_args
-        self.assertEqual(args[0], f"{humanize_api.API_BASE}/document")
+        self.assertEqual(args[0], f"{verve_api.API_BASE}/document")
         self.assertEqual(kwargs["json"], {"id": "doc-77"})
         self.assertEqual(kwargs["headers"]["apikey"], "my-key")
 
     def test_done_without_output_returns_empty_string(self):
         with (
-            patch.object(humanize_api.requests, "post", return_value=response({"status": "done"})),
-            patch.object(humanize_api.time, "sleep"),
+            patch.object(verve_api.requests, "post", return_value=response({"status": "done"})),
+            patch.object(verve_api.time, "sleep"),
         ):
-            self.assertEqual(humanize_api.poll_result("k", "doc-1"), "")
+            self.assertEqual(verve_api.poll_result("k", "doc-1"), "")
 
     def test_error_status_exits_one(self):
         with (
-            patch.object(humanize_api.requests, "post", return_value=response({"status": "error", "message": "nope"})),
-            patch.object(humanize_api.time, "sleep"),
+            patch.object(verve_api.requests, "post", return_value=response({"status": "error", "message": "nope"})),
+            patch.object(verve_api.time, "sleep"),
         ):
             with self.assertRaises(SystemExit) as ctx:
-                humanize_api.poll_result("k", "doc-1")
+                verve_api.poll_result("k", "doc-1")
         self.assertEqual(ctx.exception.code, 1)
 
     def test_gives_up_after_max_polls(self):
         with (
-            patch.object(humanize_api.requests, "post", return_value=response({"status": "pending"})) as post,
-            patch.object(humanize_api.time, "sleep"),
+            patch.object(verve_api.requests, "post", return_value=response({"status": "pending"})) as post,
+            patch.object(verve_api.time, "sleep"),
         ):
             with self.assertRaises(SystemExit) as ctx:
-                humanize_api.poll_result("k", "doc-1")
+                verve_api.poll_result("k", "doc-1")
         self.assertEqual(ctx.exception.code, 1)
-        self.assertEqual(post.call_count, humanize_api.MAX_POLLS)
+        self.assertEqual(post.call_count, verve_api.MAX_POLLS)
 
     def test_sleeps_the_configured_interval(self):
         pending = response({"status": "pending"})
         done = response({"status": "done", "output": "x"})
         with (
-            patch.object(humanize_api.requests, "post", side_effect=[pending, done]),
-            patch.object(humanize_api.time, "sleep") as sleep,
+            patch.object(verve_api.requests, "post", side_effect=[pending, done]),
+            patch.object(verve_api.time, "sleep") as sleep,
         ):
-            humanize_api.poll_result("k", "doc-1")
-        sleep.assert_called_once_with(humanize_api.POLL_INTERVAL)
+            verve_api.poll_result("k", "doc-1")
+        sleep.assert_called_once_with(verve_api.POLL_INTERVAL)
 
 
-class TestMain(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name)
-        self._saved = humanize_api.CONFIG_FILE
-        humanize_api.CONFIG_FILE = self.root / "config.json"
-
-    def tearDown(self):
-        humanize_api.CONFIG_FILE = self._saved
-        self.tmp.cleanup()
-
+class TestMain(ConfigSandbox):
     def write_config(self, payload: dict):
-        humanize_api.CONFIG_FILE.write_text(json.dumps(payload))
+        verve_api.CONFIG_FILE.write_text(json.dumps(payload))
 
     def run_main(self, *argv: str):
-        with patch.object(sys, "argv", ["humanize-api.py", *argv]):
-            humanize_api.main()
+        with patch.object(sys, "argv", ["verve-api.py", *argv]):
+            verve_api.main()
 
     def test_config_without_api_key_exits_one(self):
         self.write_config({"other": "value"})
@@ -221,7 +233,7 @@ class TestMain(unittest.TestCase):
         source = self.root / "input.txt"
         source.write_text("text from a file")
 
-        with patch.object(humanize_api.requests, "post") as post, patch.object(humanize_api.time, "sleep"):
+        with patch.object(verve_api.requests, "post") as post, patch.object(verve_api.time, "sleep"):
             post.side_effect = [
                 response({"id": "doc-9"}),
                 response({"status": "done", "output": "humanised"}),

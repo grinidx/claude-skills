@@ -60,7 +60,7 @@ updates:
           - "*"
 
   - package-ecosystem: pip
-    directory: /humanize
+    directory: /verve
     schedule:
       interval: weekly
       day: monday
@@ -68,8 +68,8 @@ updates:
       - dependencies
       - python
     commit-message:
-      prefix: "deps(humanize)"
+      prefix: "deps(verve)"
     groups:
-      humanize:
+      verve:
         patterns:
           - "*"

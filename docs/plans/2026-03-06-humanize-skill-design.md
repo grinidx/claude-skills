@@ -1,5 +1,9 @@
 # Humanize Skill Design
 
+> **Historical.** The skill shipped as `humanize` and was renamed to `verve` in
+> July 2026. Paths and names below are as they were on the date of writing; the
+> current skill lives in `verve/`.
+
 **Date:** 2026-03-06
 **Status:** Approved
 

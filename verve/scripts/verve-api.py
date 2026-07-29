@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Humanize text via Undetectable AI REST API."""
+"""Humanise text via Undetectable AI REST API."""
 
 import argparse
 import json
@@ -9,18 +9,30 @@ from pathlib import Path
 
 import requests
 
-CONFIG_FILE = Path.home() / ".humanize" / "config.json"
+CONFIG_FILE = Path.home() / ".verve" / "config.json"
+# The skill was called `humanize` until Jul 2026. Anyone who ran the old setup
+# has a key at the old path, so read it rather than making them re-enter it.
+LEGACY_CONFIG_FILE = Path.home() / ".humanize" / "config.json"
 API_BASE = "https://humanize.undetectable.ai"
 POLL_INTERVAL = 5
 MAX_POLLS = 60
 
 
+def config_path():
+    if CONFIG_FILE.exists():
+        return CONFIG_FILE
+    if LEGACY_CONFIG_FILE.exists():
+        return LEGACY_CONFIG_FILE
+    return CONFIG_FILE
+
+
 def load_config():
-    if not CONFIG_FILE.exists():
+    path = config_path()
+    if not path.exists():
         print("No config found. Run setup first:", file=sys.stderr)
-        print("  ~/.claude/skills/humanize/scripts/setup.sh", file=sys.stderr)
+        print("  ~/.claude/skills/verve/scripts/setup.sh", file=sys.stderr)
         sys.exit(1)
-    with open(CONFIG_FILE) as f:
+    with open(path) as f:
         return json.load(f)
 
 
@@ -62,10 +74,10 @@ def poll_result(api_key, doc_id):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Humanize text via Undetectable AI")
+    parser = argparse.ArgumentParser(description="Humanise text via Undetectable AI")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--text", help="Text to humanize")
-    group.add_argument("--file", help="File containing text to humanize")
+    group.add_argument("--text", help="Text to humanise")
+    group.add_argument("--file", help="File containing text to humanise")
     args = parser.parse_args()
 
     config = load_config()

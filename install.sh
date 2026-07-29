@@ -5,7 +5,7 @@
 #   ./install.sh              # Install all skills (interactive)
 #   ./install.sh --all        # Install all skills (no prompts)
 #   ./install.sh garmin       # Install specific skill(s)
-#   ./install.sh garmin humanize
+#   ./install.sh garmin verve
 #
 # Skills are symlinked into ~/.claude/skills/ so edits to this repo
 # are immediately available to Claude Code — no re-install needed.
@@ -17,7 +17,7 @@ SKILLS_DIR="$HOME/.claude/skills"
 
 # All available Claude Code skills (have SKILL.md)
 # Note: outlook and trello moved to their own repos under github.com/dbhq-uk (Jul 2026)
-AVAILABLE_SKILLS=(garmin humanize gpt-image-2)
+AVAILABLE_SKILLS=(garmin verve gpt-image-2)
 
 # Colours
 GREEN='\033[0;32m'
@@ -49,9 +49,9 @@ check_deps_garmin() {
     return 0
 }
 
-check_deps_humanize() {
+check_deps_verve() {
     if ! command -v python3 &>/dev/null; then
-        err "Missing dependency for humanize: python3"
+        err "Missing dependency for verve: python3"
         return 1
     fi
     return 0
@@ -74,7 +74,7 @@ check_deps() {
     local skill="$1"
     case "$skill" in
         garmin)         check_deps_garmin ;;
-        humanize)       check_deps_humanize ;;
+        verve)          check_deps_verve ;;
         gpt-image-2)    check_deps_gpt_image_2 ;;
         *)              return 0 ;;
     esac
@@ -164,25 +164,25 @@ post_install() {
             fi
             ;;
 
-        humanize)
-            chmod +x "$REPO_DIR/humanize/scripts/setup.sh" 2>/dev/null || true
-            chmod +x "$REPO_DIR/humanize/scripts/humanize-api.py" 2>/dev/null || true
+        verve)
+            chmod +x "$REPO_DIR/verve/scripts/setup.sh" 2>/dev/null || true
+            chmod +x "$REPO_DIR/verve/scripts/verve-api.py" 2>/dev/null || true
 
             # Set up Python venv if needed
-            if [ ! -d "$REPO_DIR/humanize/.venv" ]; then
+            if [ ! -d "$REPO_DIR/verve/.venv" ]; then
                 info "Setting up Python virtual environment..."
-                python3 -m venv "$REPO_DIR/humanize/.venv"
-                "$REPO_DIR/humanize/.venv/bin/pip" install --upgrade pip -q
-                "$REPO_DIR/humanize/.venv/bin/pip" install -r "$REPO_DIR/humanize/requirements.txt" -q
+                python3 -m venv "$REPO_DIR/verve/.venv"
+                "$REPO_DIR/verve/.venv/bin/pip" install --upgrade pip -q
+                "$REPO_DIR/verve/.venv/bin/pip" install -r "$REPO_DIR/verve/requirements.txt" -q
             else
                 ok "Python venv already exists"
-                "$REPO_DIR/humanize/.venv/bin/pip" install -r "$REPO_DIR/humanize/requirements.txt" -q 2>/dev/null || true
+                "$REPO_DIR/verve/.venv/bin/pip" install -r "$REPO_DIR/verve/requirements.txt" -q 2>/dev/null || true
             fi
 
-            if [ -f "$HOME/.humanize/config.json" ]; then
-                ok "Humanize API config found"
+            if [ -f "$HOME/.verve/config.json" ]; then
+                ok "Verve API config found"
             else
-                info "No commercial API configured (optional) -- run: ~/.claude/skills/humanize/scripts/setup.sh"
+                info "No commercial API configured (optional) -- run: ~/.claude/skills/verve/scripts/setup.sh"
             fi
             ;;
 
@@ -235,7 +235,7 @@ for arg in "$@"; do
             echo "Examples:"
             echo "  $0                    # Interactive — choose which skills to install"
             echo "  $0 --all              # Install everything"
-            echo "  $0 garmin humanize        # Install specific skills"
+            echo "  $0 garmin verve        # Install specific skills"
             exit 0
             ;;
         *)
@@ -269,7 +269,7 @@ elif [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
     echo
     read -r -p "Install all? (Y/n): " install_all
     if [[ "$install_all" =~ ^[Nn]$ ]]; then
-        read -r -p "Which skills? (space-separated, e.g. 'garmin humanize'): " -a REQUESTED_SKILLS
+        read -r -p "Which skills? (space-separated, e.g. 'garmin verve'): " -a REQUESTED_SKILLS
         if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
             echo "Nothing selected. Exiting."
             exit 0
