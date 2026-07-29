@@ -81,13 +81,13 @@ code. The CI matrix encodes the real floor for each:
 | Skill | Floor | Why |
 |-------|-------|-----|
 | gpt-image-2 | 3.9 | PyYAML only |
-| humanize | 3.9 | no annotations; `requests` resolves an older release on 3.9 |
+| verve | 3.9 | no annotations; `requests` resolves an older release on 3.9 |
 | garmin | 3.12 | `garminconnect` 0.3.x declares `Requires-Python >=3.12` |
 
 ## Credentials
 
 No secrets in the repo, ever. Each skill externalises its credentials to a
-location outside the tree (`~/.garmin/`, `~/.humanize/`, `$OPENAI_API_KEY`). If a
+location outside the tree (`~/.garmin/`, `~/.verve/`, `$OPENAI_API_KEY`). If a
 new skill needs a credential, add it to the README and CLAUDE.md credentials
 tables — CI checks that the tables list every skill.
 

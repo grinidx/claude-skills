@@ -36,7 +36,7 @@ the tree:
 |-------|----------|
 | PST to Markdown | none (fully local) |
 | Garmin | `~/.garmin/` |
-| Humanize | `~/.humanize/` (optional, commercial API only) |
+| Verve | `~/.verve/` (optional, commercial API only) |
 | GPT Image 2 | `$OPENAI_API_KEY` environment variable |
 | Deep Research | none required; optional Bright Data CLI login |
 

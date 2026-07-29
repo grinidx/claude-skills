@@ -1,14 +1,14 @@
 #!/bin/bash
-# Set up Humanize skill: optional Undetectable AI API key + Python venv
+# Set up Verve skill: optional Undetectable AI API key + Python venv
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 VENV_DIR="$SKILL_DIR/.venv"
-CONFIG_DIR="$HOME/.humanize"
+CONFIG_DIR="$HOME/.verve"
 CONFIG_FILE="$CONFIG_DIR/config.json"
 
-echo "=== Humanize Skill Setup ==="
+echo "=== Verve Skill Setup ==="
 echo ""
 echo "The Claude engine works without any setup."
 echo "This setup configures the optional Undetectable AI commercial API."
@@ -36,6 +36,23 @@ echo "Installing dependencies..."
 # --- API Key ---
 mkdir -p "$CONFIG_DIR"
 chmod 700 "$CONFIG_DIR"
+
+# The skill was called `humanize` until Jul 2026. verve-api.py still reads the
+# old path, so an existing key keeps working without re-entering it here.
+LEGACY_CONFIG_FILE="$HOME/.humanize/config.json"
+if [ ! -f "$CONFIG_FILE" ] && [ -f "$LEGACY_CONFIG_FILE" ]; then
+    echo ""
+    echo "Found a config at the old path: $LEGACY_CONFIG_FILE"
+    read -r -p "Copy it to $CONFIG_FILE? (Y/n): " migrate
+    if [[ ! "$migrate" =~ ^[Nn]$ ]]; then
+        cp "$LEGACY_CONFIG_FILE" "$CONFIG_FILE"
+        chmod 600 "$CONFIG_FILE"
+        echo "Copied. The old file is left in place; delete it when you're happy."
+        echo ""
+        echo "=== Setup Complete ==="
+        exit 0
+    fi
+fi
 
 if [ -f "$CONFIG_FILE" ]; then
     echo ""
@@ -68,4 +85,4 @@ echo "=== Setup Complete ==="
 echo "Virtual environment: $VENV_DIR"
 echo "Config: $CONFIG_FILE"
 echo ""
-echo "Test with: ~/.claude/skills/humanize/.venv/bin/python ~/.claude/skills/humanize/scripts/humanize-api.py --text 'Hello world'"
+echo "Test with: ~/.claude/skills/verve/.venv/bin/python ~/.claude/skills/verve/scripts/verve-api.py --text 'Hello world'"

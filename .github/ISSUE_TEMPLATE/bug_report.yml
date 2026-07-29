@@ -15,7 +15,7 @@ body:
       options:
         - garmin
         - gpt-image-2
-        - humanize
+        - verve
         - installers (install.sh / install-codex.sh)
         - something else
     validations:
