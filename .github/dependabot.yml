@@ -69,6 +69,15 @@ updates:
       - python
     commit-message:
       prefix: "deps(verve)"
+    ignore:
+      # requests 2.33+ declares Requires-Python >=3.10, and this skill's CI
+      # floor is 3.9, so the bump fails at pip install rather than at test time.
+      # It also buys nothing: requirements.txt states a floor, not a pin, so the
+      # 3.13 job already installs the current release under `requests>=2.32.4`.
+      # PR #19 set that floor for this reason and #22 re-proposed the same bump.
+      # Bounded at 2.33 so a 2.32.x security patch still comes through.
+      - dependency-name: requests
+        versions: [">=2.33"]
     groups:
       verve:
         patterns:
